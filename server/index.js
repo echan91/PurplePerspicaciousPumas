@@ -129,6 +129,7 @@ io.on('connection', (socket) => {
     console.log(Rooms[gameName]);
     queries.retrieveGameInstance(gameName)
     .then(function (game){
+      console.log('joining game', game)
     // add client to game DB if they're not already in players list
       if (game.players.indexOf(username) !== -1) {
         var players = game.players.slice(0);
