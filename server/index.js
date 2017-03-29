@@ -130,7 +130,7 @@ io.on('connection', (socket) => {
     queries.retrieveGameInstance(gameName)
     .then(function (game){
     // add client to game DB if they're not already in players list
-      if (!game.players.indexOf(username)) {
+      if (game.players.indexOf(username) === -1) {
         var players = game.players.slice(0);
         players.push(username);
         return queries.addPlayerToGameInstance(gameName, players);
@@ -269,7 +269,7 @@ io.on('connection', (socket) => {
     .then(function(game) {
       var currentRound = game.currentRound;
       var Rounds = game.rounds.slice(0);
-      if (!Rounds[currentRound].ready.indexOf(username)) {
+      if (Rounds[currentRound].ready.indexOf(username)===-1) {
         Rounds[currentRound].ready.push(username);
         queries.updateRounds(gameName, Rounds)
         .then(function() {
