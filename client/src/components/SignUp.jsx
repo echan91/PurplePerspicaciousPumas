@@ -2,7 +2,6 @@
 import React from 'react';
 import $ from 'jquery';
 import { Button, Form, FormGroup, Col, FormControl, ControlLabel } from 'react-bootstrap';
-var hostUrl = process.env.LIVE_URL || 'http://localhost:3000/';
 var Filter = require('bad-words');
 var filter = new Filter();
 
@@ -39,7 +38,7 @@ class SignUp extends React.Component {
 
   handleSignUpAttempt(email, username, password) {
     $.ajax({
-      url: hostUrl + 'signup',
+      url: '/signup',
       method: 'POST',
       headers: {'content-type': 'application/json'},
       data: JSON.stringify({'username': username, 'email': email, 'password': password}),

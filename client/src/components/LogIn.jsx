@@ -2,7 +2,6 @@
 import React from 'react';
 import $ from 'jquery';
 import { Button, Form, FormGroup, Col, FormControl, ControlLabel } from 'react-bootstrap';
-var hostUrl = process.env.LIVE_URL || 'http://localhost:3000/';
 
 
 class LogIn extends React.Component {
@@ -33,7 +32,7 @@ class LogIn extends React.Component {
 
   handleLogInAttempt(username, password) {
     $.ajax({
-      url: hostUrl + 'login',
+      url: '/login',
       method: 'POST',
       headers: {'content-type': 'application/json'},
       data: JSON.stringify({'username': username, 'password': password}),
