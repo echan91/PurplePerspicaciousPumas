@@ -173,7 +173,6 @@ io.on('connection', (socket) => {
           let currentPlayers = game.players.filter(player => player !== username);
           // Update record
           return queries.addPlayerToGameInstance(gameName, currentPlayers);
-
         } else {
           // Else throw error
           console.log('Error, username not found');
@@ -182,7 +181,14 @@ io.on('connection', (socket) => {
       })
       .then( () => queries.retrieveGameInstance(gameName) )
       // Emit 'update waiting room'
-      .then( game => io.to(gameName).emit('update waiting room', game) )
+      .then( game => {
+        if (game.players.length > 0) {
+          io.to(gameName).emit('update waiting room', game)
+        } else {
+          // Remove game from DB
+          queries.destroyGameInstance(gameName);
+        }
+      })
       // If number of players is now zero then leave that socket?
   });
 

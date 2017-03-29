@@ -2,7 +2,13 @@ var models = require('./index.js');
 var games = models.db.collection('gameinstancemodels');
 
 module.exports.retrieveGameInstance = function(gameName) {
+
   return games.findOne({gameName: gameName});
+};
+
+module.exports.destroyGameInstance = function(gameName) {
+
+  return games.deleteOne({gameName: gameName});
 };
 
 module.exports.addPlayerToGameInstance = function(gameName, players) {
