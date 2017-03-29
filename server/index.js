@@ -158,7 +158,17 @@ io.on('connection', (socket) => {
       console.log(error)
       throw error;
     })
-  })
+  });
+
+  socket.on('leave game', (data) => {
+    console.log('client leaving room: ', data);
+    // Query for game instance
+    // If username found in array then remove
+    // Else throw error
+    // Update record
+    // If number of players is now zero then leave that socket?
+    // Emit 'update waiting room'
+  });
 
   socket.on('prompt created', (data) => {
     var gameName = data.gameName;
@@ -326,8 +336,5 @@ io.on('connection', (socket) => {
     console.log('a user disconnected', data);
   });
 
-  socket.on('leave room', (data) => {
-    // TODO
-  });
 });
 
