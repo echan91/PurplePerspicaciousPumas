@@ -188,8 +188,10 @@ io.on('connection', (socket) => {
           // Remove game from DB
           queries.destroyGameInstance(gameName);
         }
+        // If number of players is now zero then leave that socket?
+        console.log('Leaving room: ', gameName);
+        socket.leave(gameName);
       })
-      // If number of players is now zero then leave that socket?
   });
 
   socket.on('prompt created', (data) => {
