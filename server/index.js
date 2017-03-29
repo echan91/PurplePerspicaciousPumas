@@ -124,14 +124,12 @@ io.on('connection', (socket) => {
     var username = data.username;
     var gameName = data.gameName;
     Sockets[socket] = gameName;
-    console.log(Sockets[socket]);
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
-    console.log(Rooms[gameName]);
     queries.retrieveGameInstance(gameName)
     .then(function (game){
       console.log('joining game', game)
     // add client to game DB if they're not already in players list
-      if (game.players.indexOf(username) !== -1) {
+      if (!game.players.includes(username)) {
         var players = game.players.slice(0);
         players.push(username);
         return queries.addPlayerToGameInstance(gameName, players);
@@ -270,7 +268,7 @@ io.on('connection', (socket) => {
     .then(function(game) {
       var currentRound = game.currentRound;
       var Rounds = game.rounds.slice(0);
-      if (Rounds[currentRound].ready.indexOf(username) !== -1) {
+      if (!Rounds[currentRound].ready.includes(username)) {
         Rounds[currentRound].ready.push(username);
         queries.updateRounds(gameName, Rounds)
         .then(function() {
