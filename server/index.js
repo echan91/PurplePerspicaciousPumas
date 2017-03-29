@@ -40,7 +40,7 @@ app.post('/signup', function (req, res) {
     if (err) {
       console.log(err);
       return res.status(400).send(err);
-    } 
+    }
     console.log('registered User');
     passport.authenticate('local')(req, res, function() {
       console.log('success', user);
@@ -139,7 +139,7 @@ io.on('connection', (socket) => {
       return queries.retrieveGameInstance(gameName);
     }).then(function (game) {
     // then, check num of players in players list
-      // if it's 4 and gameStage is waiting 
+      // if it's 4 and gameStage is waiting
       if (game.players.length === 4 && game.gameStage === 'waiting') {
         // update gameStage in db from waiting to playing
         return queries.setGameInstanceGameStageToPlaying(gameName)
@@ -324,6 +324,10 @@ io.on('connection', (socket) => {
     }
 
     console.log('a user disconnected', data);
+  });
+
+  socket.on('leave room', (data) => {
+    // TODO
   });
 });
 
