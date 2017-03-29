@@ -40,7 +40,7 @@ app.post('/signup', function (req, res) {
     if (err) {
       console.log(err);
       return res.status(400).send(err);
-    } 
+    }
     console.log('registered User');
     passport.authenticate('local')(req, res, function() {
       console.log('success', user);
@@ -139,7 +139,7 @@ io.on('connection', (socket) => {
       return queries.retrieveGameInstance(gameName);
     }).then(function (game) {
     // then, check num of players in players list
-      // if it's 4 and gameStage is waiting 
+      // if it's 4 and gameStage is waiting
       if (game.players.length === 4 && game.gameStage === 'waiting') {
         // update gameStage in db from waiting to playing
         return queries.setGameInstanceGameStageToPlaying(gameName)
@@ -158,7 +158,41 @@ io.on('connection', (socket) => {
       console.log(error)
       throw error;
     })
-  })
+  });
+
+  socket.on('leave game', (data) => {
+    console.log('client leaving room: ', data);
+    // Get the username and gameName
+    const { username, gameName } = data;
+    // Query for game instance
+    queries.retrieveGameInstance(gameName)
+      .then(game => {
+        // If username found in array then remove
+        console.log('GAME INFO ON LEAVING GAME', game);
+        if (game.players.includes(username)) {
+          let currentPlayers = game.players.filter(player => player !== username);
+          // Update record
+          return queries.addPlayerToGameInstance(gameName, currentPlayers);
+        } else {
+          // Else throw error
+          console.log('Error, username not found');
+          return 'Error';
+        }
+      })
+      .then( () => queries.retrieveGameInstance(gameName) )
+      // Emit 'update waiting room'
+      .then( game => {
+        if (game.players.length > 0) {
+          io.to(gameName).emit('update waiting room', game)
+        } else {
+          // Remove game from DB
+          queries.destroyGameInstance(gameName);
+        }
+        // If number of players is now zero then leave that socket?
+        console.log('Leaving room: ', gameName);
+        socket.leave(gameName);
+      })
+  });
 
   socket.on('prompt created', (data) => {
     var gameName = data.gameName;
@@ -325,5 +359,6 @@ io.on('connection', (socket) => {
 
     console.log('a user disconnected', data);
   });
+
 });
 
