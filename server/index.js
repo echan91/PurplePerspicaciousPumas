@@ -162,12 +162,27 @@ io.on('connection', (socket) => {
 
   socket.on('leave game', (data) => {
     console.log('client leaving room: ', data);
+    // Get the username and gameName
+    const { username, gameName } = data;
     // Query for game instance
-    // If username found in array then remove
-    // Else throw error
-    // Update record
-    // If number of players is now zero then leave that socket?
-    // Emit 'update waiting room'
+    queries.retrieveGameInstance(gameName)
+      .then(game => {
+        // If username found in array then remove
+        if (game.players.includes(username)) {
+          let currentPlayers = game.players.filter(player => player !== username);
+          // Update record
+          return queries.addPlayerToGameInstance(gameName, curentPlayers);
+
+        } else {
+          // Else throw error
+          console.log('Error, username not found');
+          return 'Error';
+        }
+      })
+      .then( () => return queries.retrieveGameInstance(gameName) )
+      // Emit 'update waiting room'
+      .then( game => io.to(gameName).emit('update waiting room', game) )
+      // If number of players is now zero then leave that socket?
   });
 
   socket.on('prompt created', (data) => {
