@@ -22,6 +22,7 @@ class App extends React.Component {
       // if (disconnectTimeOut) {
       //   hashHistory.push('/lobby/:disconnectTimeOut');
       // } else {
+        console.log('Sending to lobby');
         hashHistory.push('/lobby');
       // }
     }

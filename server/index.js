@@ -168,10 +168,11 @@ io.on('connection', (socket) => {
     queries.retrieveGameInstance(gameName)
       .then(game => {
         // If username found in array then remove
+        console.log('GAME INFO ON LEAVING GAME', game);
         if (game.players.includes(username)) {
           let currentPlayers = game.players.filter(player => player !== username);
           // Update record
-          return queries.addPlayerToGameInstance(gameName, curentPlayers);
+          return queries.addPlayerToGameInstance(gameName, currentPlayers);
 
         } else {
           // Else throw error
@@ -179,7 +180,7 @@ io.on('connection', (socket) => {
           return 'Error';
         }
       })
-      .then( () => return queries.retrieveGameInstance(gameName) )
+      .then( () => queries.retrieveGameInstance(gameName) )
       // Emit 'update waiting room'
       .then( game => io.to(gameName).emit('update waiting room', game) )
       // If number of players is now zero then leave that socket?
