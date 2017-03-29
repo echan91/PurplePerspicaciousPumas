@@ -55,6 +55,8 @@ class Game extends React.Component {
   }
 
   componentDidMount() {
+    // Get game name from the route url params
+    // Sends GET request to current server
     this.getGameData(this.props.params.gamename);
     this.getUsername();
   }
@@ -89,7 +91,7 @@ class Game extends React.Component {
         this.setState({game: data[0]})
       },
       error: (err) => {
-          console.log('error getting games: ', err);
+        console.log('error getting games: ', err);
       }
     });
   }
