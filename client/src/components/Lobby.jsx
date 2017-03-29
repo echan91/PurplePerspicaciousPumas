@@ -6,7 +6,6 @@ import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
 import { Button, Form, FormGroup, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
-var hostUrl = process.env.LIVE_URL || 'http://localhost:3000/';
 
 //TODO:
   // build logic to prevent users from joining a full game
@@ -28,7 +27,7 @@ class Lobby extends React.Component {
 
   getGames() {
     $.ajax({
-      url: hostUrl + 'games',
+      url: '/games',
       method: 'GET',
       headers: {'content-type': 'application/json'},
       success: (data) => {
@@ -45,7 +44,7 @@ class Lobby extends React.Component {
 
   getUsername() {
     $.ajax({
-      url: hostUrl + 'username',
+      url: '/username',
       method: 'GET',
       headers: {'content-type': 'application/json'},
       success: (username) => {
