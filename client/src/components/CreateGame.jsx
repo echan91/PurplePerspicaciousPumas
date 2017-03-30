@@ -45,12 +45,12 @@ class CreateGame extends React.Component {
     this.setState({gameName: filteredGameName});
   }
 
-  addGameToDB(gameName, promptType, callback) {
+  addGameToDB(gameName, password, promptType, callback) {
     var initialStage = promptType === 'random' ? 0 : -1;
 
     var gameInstance = {
       gameName: gameName,
-      password: '',
+      password: password,
       players: [],
       rounds: [
       {prompt: 'prompt 1', responses: [], winner: '', stage: initialStage, ready: []}, 
@@ -72,7 +72,7 @@ class CreateGame extends React.Component {
         console.log('error in login POST: ', err);
         this.setState({
           error: true
-        })
+        });
       }
     });
   }
@@ -101,7 +101,6 @@ class CreateGame extends React.Component {
     }
 
     return (
-      //form on submit, add a validatePassword function
       <div id="create-game">
           {this.state.error && errorMessage}
           <br/>
@@ -128,7 +127,7 @@ class CreateGame extends React.Component {
 
           if (this.validatePassword(this.state.password,
             this.state.confirmPassword)) {
-            this.addGameToDB(this.state.gameName, this.state.promptType, this.props.sendToGame);
+            this.addGameToDB(this.state.gameName, this.state.password, this.state.promptType, this.props.sendToGame);
           } else {
             alert('Please enter the same password!');
           }
@@ -142,7 +141,6 @@ class CreateGame extends React.Component {
 }
 export default CreateGame;
 //replace the silly string spacing
-//onClick={sendToLobby} add this to the Cancel button
 
 
 
