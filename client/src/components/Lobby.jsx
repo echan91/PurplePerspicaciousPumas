@@ -112,7 +112,7 @@ class Lobby extends React.Component {
 
     let mainPanel = currentGames;
     if (this.state.private === 1) {
-      mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/> ;
+      mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/>;
     } else if (this.state.private === -1) {
       mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
     }
@@ -120,12 +120,6 @@ class Lobby extends React.Component {
     return (
       <Col id="lobby" sm={6} smOffset={3}>
         <PageHeader>Lobby</PageHeader>
-        {this.props.params.disconnectTimeOut && <PlayerDisconnected/>}
-
-        <CreateGame sendToGame={this.props.route.sendToGame}/>
-        {this.state.games && <YourGames games={this.state.games} username={this.state.username} sendToGame={this.props.route.sendToGame}/>}
-        <h4>Current Games:</h4>
-        {this.state.games && <GameList games={this.state.games} sendToGame={this.props.route.sendToGame}/>}
 
         <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>
