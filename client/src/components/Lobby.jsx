@@ -25,15 +25,22 @@ class Lobby extends React.Component {
       games: null,
       username: null,
       chatroom: [],
+      lobbyUsers: [],
       value: ''
     }
     this.getGames = this.getGames.bind(this);
     this.sendMessageToChatroom = this.sendMessageToChatroom.bind(this);
     this.handleMessageChange = this.handleMessageChange.bind(this);
 
-    lobbyChat.on('chat updated', (messages) => {
+    lobbyChat.on('chat updated', messages => {
       this.setState({chatroom: messages});
       console.log('Current client side chat: ', this.state.chatroom);
+    });
+
+    lobbyChat.on('user joined lobby', userList => {
+      console.log(userList);
+      this.setState({lobbyUsers: userList});
+      console.log('Current lobby users: ', this.state.lobbyUsers);
     });
   }
 
@@ -98,6 +105,9 @@ class Lobby extends React.Component {
         <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
         <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
 
+        <Panel header="Users in Chat" bsStyle="primary">
+          {this.state.lobbyUsers.map(user => <p>{user}</p>)}
+        </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
         </Panel>

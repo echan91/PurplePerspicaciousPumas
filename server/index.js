@@ -110,6 +110,7 @@ var io = require('socket.io')(server);
 
 const Sockets = {};
 const Rooms = {};
+const lobbyUsers = [];
 const lobbyChatMessages = [];
 
 io.on('connection', (socket) => {
@@ -119,10 +120,16 @@ io.on('connection', (socket) => {
     const username = data.username;
     console.log(`${username} has joined the lobby!`)
     socket.join('lobby');
+    if (!lobbyUsers.includes(username)) {
+      lobbyUsers.push(username);
+    }
 
     // Send current chat messages to new user that joined
     io.to('lobby').emit('chat updated', lobbyChatMessages);
-  })
+    console.log('Lobby users: ', lobbyUsers);
+    io.to('lobby').emit('user joined lobby', lobbyUsers);
+    console.log('it fired');
+  });
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
