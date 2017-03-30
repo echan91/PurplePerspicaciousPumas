@@ -117,7 +117,6 @@ let lobbyChatMessages = [];
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
 
-  // TODO: Fix when users disconnect or leave the page
   socket.on('join lobby', data => {
     const username = data.username;
 
