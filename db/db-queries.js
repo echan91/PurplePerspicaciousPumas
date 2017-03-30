@@ -11,9 +11,14 @@ module.exports.destroyGameInstance = function(gameName) {
   return games.deleteOne({gameName: gameName});
 };
 
-module.exports.addPlayerToGameInstance = function(gameName, players) {
+module.exports.addPlayerToGameInstance = function(gameName, username) {
 
-  return games.update({gameName: gameName}, {$set: {players: players} });
+  return games.update({gameName: gameName}, {$push: {players: username} });
+};
+
+module.exports.removePlayerFromGameInstance = function(gameName, username) {
+
+  return games.update({gameName: gameName}, {$pull: {players: username} });
 };
 
 module.exports.setGameInstanceGameStageToPlaying = function(gameName) {

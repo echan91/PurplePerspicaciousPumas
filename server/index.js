@@ -30,10 +30,6 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-
-// mongoose.connect('mongodb://localhost/passport_local_mongoose_express4');
-
-
 app.post('/signup', function (req, res) {
   console.log('User tried to sign up', req.body.username);
   User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function (err, user) {
@@ -121,23 +117,26 @@ io.on('connection', (socket) => {
     // data needs to be gamename and username
     console.log('client joining room: ', data);
     socket.join(data.gameName);
-    var username = data.username;
-    var gameName = data.gameName;
+
+    const { username, gameName } = data;
+
     Sockets[socket] = gameName;
     console.log(Sockets[socket]);
+
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
     console.log(Rooms[gameName]);
+
     queries.retrieveGameInstance(gameName)
     .then(function (game){
     // add client to game DB if they're not already in players list
       if (!game.players.includes(username)) {
-        var players = game.players.slice(0);
-        players.push(username);
-        return queries.addPlayerToGameInstance(gameName, players);
+        return queries.addPlayerToGameInstance(gameName, username);
       }
-    }).then(function () {
+    })
+    .then(function () {
       return queries.retrieveGameInstance(gameName);
-    }).then(function (game) {
+    })
+    .then(function (game) {
     // then, check num of players in players list
       // if it's 4 and gameStage is waiting
       if (game.players.length === 4 && game.gameStage === 'waiting') {
@@ -154,7 +153,8 @@ io.on('connection', (socket) => {
         console.log('joined, game: ', game);
         io.to(gameName).emit('update waiting room', game);
       }
-    }).catch(function(error) {
+    })
+    .catch(function(error) {
       console.log(error)
       throw error;
     })
@@ -172,7 +172,7 @@ io.on('connection', (socket) => {
         if (game.players.includes(username)) {
           let currentPlayers = game.players.filter(player => player !== username);
           // Update record
-          return queries.addPlayerToGameInstance(gameName, currentPlayers);
+          return queries.removePlayerFromGameInstance(gameName, username);
         } else {
           // Else throw error
           console.log('Error, username not found');
