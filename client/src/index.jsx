@@ -15,34 +15,44 @@ class App extends React.Component {
 
       this.sendToGame = this.sendToGame.bind(this);
       this.sendToLobby = this.sendToLobby.bind(this);
+      this.sendToCreateGame = this.sendToCreateGame.bind(this);
     }
 
     sendToLobby(disconnectTimeOut) {
-      if (disconnectTimeOut) {
-        hashHistory.push('/lobby/:disconnectTimeOut');
-      } else {
+      // console.log(disconnectTimeOut);
+      // if (disconnectTimeOut) {
+      //   hashHistory.push('/lobby/:disconnectTimeOut');
+      // } else {
+        console.log('Sending to lobby');
         hashHistory.push('/lobby');
-      }
+      // }
     }
 
     sendToGame(gameName) {
       hashHistory.push(/game/ + gameName);
     }
 
+    sendToCreateGame() {
+      hashHistory.push('/createGame');
+    }
+
     render() {
       return (
         <div>
           <Router history={hashHistory}>
-            <Route path="/" component={Home} sendToLobby={this.sendToLobby} handleSignUp={this.handleSignUp} handleLogIn={this.handleLogIn}/>
-            <Route path="/lobby" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut}/>
-            <Route path="/lobby/:disconnectTimeOut" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut}/>
+            <Route path="/" component={Home} sendToLobby={this.sendToLobby} handleSignUp={this.handleSignUp} handleLogIn={this.handleLogIn} />
+            <Route path="/lobby" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut} sendToCreateGame={this.sendToCreateGame} />
+            <Route path="/lobby/:disconnectTimeOut" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut} />
             <Route path="/game/:gamename" component={Game} sendToLobby={this.sendToLobby}/>
           </Router>
         </div>
       );
     }
 }
-             //   <SignUp onSubmit={this.handleSignUp}/>
+  //   <SignUp onSubmit={this.handleSignUp}/>
+// import CreateGame from './components/CreateGame.jsx';
+  // <Route path="/createGame" component={CreateGame} sendToLobby={this.sendToLobby} sendToGame={this.sendToGame}/>
+
 
 ReactDOM.render(
   <App/>,
