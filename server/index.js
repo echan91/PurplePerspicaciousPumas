@@ -30,17 +30,13 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-
-// mongoose.connect('mongodb://localhost/passport_local_mongoose_express4');
-
-
 app.post('/signup', function (req, res) {
   console.log('User tried to sign up', req.body.username);
   User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function (err, user) {
     if (err) {
       console.log(err);
       return res.status(400).send(err);
-    } 
+    }
     console.log('registered User');
     passport.authenticate('local')(req, res, function() {
       console.log('success', user);
@@ -115,50 +111,72 @@ var Sockets = {};
 var Rooms = {};
 
 io.on('connection', (socket) => {
-  console.log('a user connected to the socket');
+  console.log(`A user connected to the socket`);
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
-    console.log('client joining room: ', data);
-    socket.join(data.gameName);
-    var username = data.username;
-    var gameName = data.gameName;
+    const { username, gameName } = data;
+
+    console.log(`${username} is joining room: ${gameName}`);
+    socket.join(gameName);
+
     Sockets[socket] = gameName;
-    console.log(Sockets[socket]);
+    console.log(`Sockets: ${Sockets[socket]}`);
+
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
-    console.log(Rooms[gameName]);
+    console.log(`Rooms: ${Rooms[gameName]}`);
+
     queries.retrieveGameInstance(gameName)
-    .then(function (game){
-    // add client to game DB if they're not already in players list
+    .then(game => {
+      // add client to game DB if they're not already in players list
       if (!game.players.includes(username)) {
-        var players = game.players.slice(0);
-        players.push(username);
-        return queries.addPlayerToGameInstance(gameName, players);
+        return queries.addPlayerToGameInstance(gameName, username);
       }
-    }).then(function () {
-      return queries.retrieveGameInstance(gameName);
-    }).then(function (game) {
-    // then, check num of players in players list
-      // if it's 4 and gameStage is waiting 
-      if (game.players.length === 4 && game.gameStage === 'waiting') {
-        // update gameStage in db from waiting to playing
-        return queries.setGameInstanceGameStageToPlaying(gameName)
-        .then(function () {
-          return queries.retrieveGameInstance(gameName)
-          .then(function (game) {
-          // emit 'start game' event and send the game instance obj
-            io.to(gameName).emit('start game', game);
-          })
-        });
-      } else {
-        console.log('joined, game: ', game);
-        io.to(gameName).emit('update waiting room', game);
-      }
-    }).catch(function(error) {
-      console.log(error)
-      throw error;
     })
-  })
+    .then(game => {
+      const { players, gameStage } = game.value;
+      console.log('DATA!', players.length, gameStage);
+
+      if (players.length === 4 && gameStage === 'waiting') {
+        queries.setGameInstanceGameStageToPlaying(gameName)
+          .then(game => {
+            console.log('Starting game: ', game.value)
+            io.to(gameName).emit('start game', game.value)
+          });
+      } else {
+        console.log('Joining Game: ', game.value);
+        io.to(gameName).emit('update waiting room', game.value);
+      }
+    })
+    .catch(error => console.log(error))
+  });
+
+  socket.on('leave game', (data) => {
+    const { username, gameName } = data;
+
+    queries.retrieveGameInstance(gameName)
+      .then(game => {
+        if (game.players.includes(username)) {
+          let currentPlayers = game.players.filter(player => player !== username);
+
+          return queries.removePlayerFromGameInstance(gameName, username);
+        } else {
+          console.log('Error, username not found');
+          return 'Error';
+        }
+      })
+      .then(game => {
+        if (game.value.players.length > 0) {
+          io.to(gameName).emit('update waiting room', game.value)
+        } else {
+          // If number of players is now zero then destroy that room
+          queries.destroyGameInstance(gameName);
+        }
+        console.log(`${username} is leaving room: ${gameName}`);
+        socket.leave(gameName);
+      })
+      .catch(error => console.log(error))
+  });
 
   socket.on('prompt created', (data) => {
     var gameName = data.gameName;
@@ -325,5 +343,6 @@ io.on('connection', (socket) => {
 
     console.log('a user disconnected', data);
   });
+
 });
 

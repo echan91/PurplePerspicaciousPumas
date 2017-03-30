@@ -5,8 +5,6 @@ import { DropdownButton, MenuItem, Button, Form, FormGroup, Col, FormControl, Co
 var Filter = require('bad-words');
 var filter = new Filter();
 
-var hostUrl = process.env.LIVE_URL || 'http://localhost:3000/';
-
 class CreateGame extends React.Component {
   constructor(props) {
     super(props)
@@ -61,7 +59,7 @@ class CreateGame extends React.Component {
     }
 
     $.ajax({
-      url: hostUrl + 'games',
+      url: '/games',
       method: 'POST',
       headers: {'content-type': 'application/json'},
       data: JSON.stringify(gameInstance),
