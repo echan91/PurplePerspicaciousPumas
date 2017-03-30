@@ -133,7 +133,8 @@ io.on('connection', (socket) => {
         return queries.addPlayerToGameInstance(gameName, username);
       }
     })
-    .then(function () {
+    .then(function (doc) {
+      console.log('DATA!', doc);
       return queries.retrieveGameInstance(gameName);
     })
     .then(function (game) {
