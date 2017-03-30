@@ -19,12 +19,12 @@ module.exports.addPlayerToGameInstance = function(gameName, username) {
 
 module.exports.removePlayerFromGameInstance = function(gameName, username) {
 
-  return games.update({gameName: gameName}, {$pull: {players: username} });
+  return games.findOneAndUpdate({gameName: gameName}, {$pull: {players: username}}, {returnOriginal: false});
 };
 
 module.exports.setGameInstanceGameStageToPlaying = function(gameName) {
 
-  return games.update({gameName: gameName}, { $set: {gameStage: 'playing'} });
+  return games.findOneAndUpdate({gameName: gameName}, {$set: {gameStage: 'playing'}}, {returnOriginal: false});
 };
 
 module.exports.updateRounds = function(gameName, roundsArray) {

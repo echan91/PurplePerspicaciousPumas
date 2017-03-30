@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
-    console.log('client joining room: ', data);
+    console.log('Client joining room: ', data);
     socket.join(data.gameName);
 
     const { username, gameName } = data;
@@ -127,32 +127,25 @@ io.on('connection', (socket) => {
     console.log(Rooms[gameName]);
 
     queries.retrieveGameInstance(gameName)
-    .then(function (game){
-    // add client to game DB if they're not already in players list
+    .then(game => {
+      // add client to game DB if they're not already in players list
       if (!game.players.includes(username)) {
         return queries.addPlayerToGameInstance(gameName, username);
       }
     })
-    .then(function (doc) {
-      console.log('DATA!', doc);
-      return queries.retrieveGameInstance(gameName);
-    })
-    .then(function (game) {
-    // then, check num of players in players list
-      // if it's 4 and gameStage is waiting
-      if (game.players.length === 4 && game.gameStage === 'waiting') {
-        // update gameStage in db from waiting to playing
-        return queries.setGameInstanceGameStageToPlaying(gameName)
-        .then(function () {
-          return queries.retrieveGameInstance(gameName)
-          .then(function (game) {
-          // emit 'start game' event and send the game instance obj
-            io.to(gameName).emit('start game', game);
-          })
-        });
+    .then(game => {
+      const { players, gameStage } = game.value;
+      console.log('DATA!', players.length, gameStage);
+
+      if (players.length === 4 && gameStage === 'waiting') {
+        queries.setGameInstanceGameStageToPlaying(gameName)
+          .then(game => {
+            console.log('Starting game: ', game.value)
+            io.to(gameName).emit('start game', game.value)
+          });
       } else {
-        console.log('joined, game: ', game);
-        io.to(gameName).emit('update waiting room', game);
+        console.log('Joining Game: ', game.value);
+        io.to(gameName).emit('update waiting room', game.value);
       }
     })
     .catch(function(error) {
