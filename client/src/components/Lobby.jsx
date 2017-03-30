@@ -22,6 +22,7 @@ class Lobby extends React.Component {
 
     this.getGames = this.getGames.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
+    this.handlePrivateState = this.handlePrivateState.bind(this);
   }
 
   componentDidMount() {
@@ -61,12 +62,15 @@ class Lobby extends React.Component {
   }
 
   handleGameCreationChoice(event) {
-    console.log('hey: ', event.target.value);
     if(event.target.value === "ordinary") {
       this.setState({private: 1});
     } else if(event.target.value === "private") {
       this.setState({private : -1});
     }
+  }
+
+  handlePrivateState() {
+    this.setState({private: 0});
   }
 
   render() {
@@ -79,13 +83,12 @@ class Lobby extends React.Component {
 
    let mainPanel = currentGames;
    if (this.state.private === 1) {
-    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={false} /> ;
+    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={false} handlePrivateState={this.handlePrivateState}/> ;
    } else if(this.state.private === -1) {
-    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={true} />;
+    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={true} handlePrivateState={this.handlePrivateState}/>;
 
    }
 
-    // console.log('this: ', this.props.route.sendToLobby);
     return (
 
       <Col id="lobby" sm={6} smOffset={3}>

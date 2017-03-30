@@ -100,8 +100,6 @@ class CreateGame extends React.Component {
         </span>) ;
     }
 
-    console.log('in create game: ', this.props);
-    
     return (
       //form on submit, add a validatePassword function
       <div id="create-game">
@@ -136,7 +134,7 @@ class CreateGame extends React.Component {
           }
           }}>Submit</Button>
         {"       "}
-        <Button bsSize="small" onClick={() => this.props.sendToLobby()}>Cancel</Button>
+        <Button bsSize="small" onClick={() => this.props.handlePrivateState()}>Cancel</Button>
       </form> 
       </div>
     )
