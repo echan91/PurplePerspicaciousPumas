@@ -11,14 +11,20 @@ module.exports.destroyGameInstance = function(gameName) {
   return games.deleteOne({gameName: gameName});
 };
 
-module.exports.addPlayerToGameInstance = function(gameName, players) {
+module.exports.addPlayerToGameInstance = function(gameName, username) {
 
-  return games.update({gameName: gameName}, {$set: {players: players} });
+  return games.findOneAndUpdate({gameName: gameName}, {$push: {players: username}}, {returnOriginal: false});
+  // return games.update({gameName: gameName}, {$push: {players: username} });
+};
+
+module.exports.removePlayerFromGameInstance = function(gameName, username) {
+
+  return games.findOneAndUpdate({gameName: gameName}, {$pull: {players: username}}, {returnOriginal: false});
 };
 
 module.exports.setGameInstanceGameStageToPlaying = function(gameName) {
 
-  return games.update({gameName: gameName}, { $set: {gameStage: 'playing'} });
+  return games.findOneAndUpdate({gameName: gameName}, {$set: {gameStage: 'playing'}}, {returnOriginal: false});
 };
 
 module.exports.updateRounds = function(gameName, roundsArray) {

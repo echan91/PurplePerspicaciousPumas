@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
-var mongodbURL = process.env.MONGODB_URI || 'mongodb://legacy:legacy@ds111940.mlab.com:11940/gg-legacy-dev';
+// var mongodbURL = process.env.MONGODB_URI || 'mongodb://legacy:legacy@ds111940.mlab.com:11940/gg-legacy-dev';
+var mongodbURL = process.env.MONGODB_URI || 'mongodb://localhost/orange-to-orange';
 mongoose.connect(mongodbURL);
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
