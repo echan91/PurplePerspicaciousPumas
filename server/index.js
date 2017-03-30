@@ -110,18 +110,27 @@ var io = require('socket.io')(server);
 
 const Sockets = {};
 const Rooms = {};
-const lobbyUsers = [];
-const lobbyChatMessages = [];
+let userSockets = {};
+let lobbyUsers = [];
+let lobbyChatMessages = [];
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
 
+  // TODO: Fix when users disconnect or leave the page
   socket.on('join lobby', data => {
     const username = data.username;
+
+    // Add user to the userSockets object so if they disconnect we know who it was.
+    userSockets[socket.id] = username;
+    console.log('Sockets', userSockets);
     console.log(`${username} has joined the lobby!`)
     socket.join('lobby');
-    if (!lobbyUsers.includes(username)) {
-      lobbyUsers.push(username);
+
+    for (let username in userSockets) {
+      if (!lobbyUsers.includes(userSockets[username])) {
+        lobbyUsers.push(userSockets[username]);
+      }
     }
 
     // Send current chat messages to new user that joined
@@ -330,38 +339,46 @@ io.on('connection', (socket) => {
   })
 
 
-  socket.on('disconnect', (data) => {
-    if (Rooms[Sockets[socket]]) {
-      Rooms[Sockets[socket]]--;
-      var timer = 60;
-      var disconnectTimeOut = function() {
-        setTimeout(function(){
-          if (timer === 0 && Rooms[Sockets[socket]] < 4) {
-            console.log('disconnectTimeOut')
-            queries.setGameInstanceGameStageToGameOver(Sockets[socket])
-            .then(function(){
-              console.log(Sockets[socket]);
-                io.to(Sockets[socket]).emit('disconnectTimeOut');
-            })
-          } else {
-            if (Rooms[Sockets[socket]] < 4) {
-              console.log(timer, Rooms[Sockets[socket]]);
-              timer = timer - 1;
-              disconnectTimeOut();
-            }
-          }
-        }, 1000);
-      }
-      queries.retrieveGameInstance(Sockets[socket])
-      .then(function(game) {
-        if (game.gameStage === 'playing') {
-          disconnectTimeOut();
-        }
-      });
-    }
+  // socket.on('disconnect', (data) => {
+  //   if (Rooms[Sockets[socket]]) {
+  //     Rooms[Sockets[socket]]--;
+  //     var timer = 60;
+  //     var disconnectTimeOut = function() {
+  //       setTimeout(function(){
+  //         if (timer === 0 && Rooms[Sockets[socket]] < 4) {
+  //           console.log('disconnectTimeOut')
+  //           queries.setGameInstanceGameStageToGameOver(Sockets[socket])
+  //           .then(function(){
+  //             console.log(Sockets[socket]);
+  //               io.to(Sockets[socket]).emit('disconnectTimeOut');
+  //           })
+  //         } else {
+  //           if (Rooms[Sockets[socket]] < 4) {
+  //             console.log(timer, Rooms[Sockets[socket]]);
+  //             timer = timer - 1;
+  //             disconnectTimeOut();
+  //           }
+  //         }
+  //       }, 1000);
+  //     }
+  //     queries.retrieveGameInstance(Sockets[socket])
+  //     .then(function(game) {
+  //       if (game.gameStage === 'playing') {
+  //         disconnectTimeOut();
+  //       }
+  //     });
+  //   }
 
-    console.log('a user disconnected', data);
-  });
+  //   console.log('a user disconnected', data);
+  // });
+
+  socket.on('disconnect', data => {
+    console.log('Someone disconnected!');
+    let username = userSockets[socket.id];
+    delete userSockets[socket.id];
+    lobbyUsers = lobbyUsers.filter(user => user !== username);
+    io.to('lobby').emit('user joined lobby', lobbyUsers);
+  })
 
   // LOBBY CHAT
   socket.on('message', (data) => {
