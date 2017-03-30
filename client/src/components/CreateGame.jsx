@@ -99,6 +99,8 @@ class CreateGame extends React.Component {
         <input placeholder="Confirm password" type="password" id="confirm_password" onChange={this.handleConfirmPassword} required={true}/>
         </span>) ;
     }
+
+    console.log('in create game: ', this.props);
     
     return (
       //form on submit, add a validatePassword function
@@ -134,7 +136,7 @@ class CreateGame extends React.Component {
           }
           }}>Submit</Button>
         {"       "}
-        <Button bsSize="small" onClick={sendToLobby}>Cancel</Button>
+        <Button bsSize="small" onClick={() => this.props.sendToLobby()}>Cancel</Button>
       </form> 
       </div>
     )
@@ -142,7 +144,7 @@ class CreateGame extends React.Component {
 }
 export default CreateGame;
 //replace the silly string spacing
-//onClick={} add this to the Cancel button
+//onClick={sendToLobby} add this to the Cancel button
 
 
 

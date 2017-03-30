@@ -34,7 +34,7 @@ class App extends React.Component {
         <div>
           <Router history={hashHistory}>
             <Route path="/" component={Home} sendToLobby={this.sendToLobby} handleSignUp={this.handleSignUp} handleLogIn={this.handleLogIn}/>
-            <Route path="/lobby" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut}/>
+            <Route path="/lobby" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut} sendToLobby={this.sendToLobby}/>
             <Route path="/lobby/:disconnectTimeOut" component={Lobby} sendToGame={this.sendToGame} disconnectTimeOut={this.state.disconnectTimeOut}/>
             <Route path="/game/:gamename" component={Game} sendToLobby={this.sendToLobby}/>
           </Router>

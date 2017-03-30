@@ -79,13 +79,13 @@ class Lobby extends React.Component {
 
    let mainPanel = currentGames;
    if (this.state.private === 1) {
-    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={false} /> ;
+    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={false} /> ;
    } else if(this.state.private === -1) {
-    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} />;
+    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={true} />;
 
    }
 
-
+    // console.log('this: ', this.props.route.sendToLobby);
     return (
 
       <Col id="lobby" sm={6} smOffset={3}>
