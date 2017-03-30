@@ -1,7 +1,7 @@
 'use strict';
 import React from 'react';
 import $ from 'jquery';
-import { DropdownButton, MenuItem, Button, Form, FormGroup, Col, FormControl, ControlLabel, PageHeader, Radio } from 'react-bootstrap';
+import { DropdownButton, MenuItem, Button, Form, FormGroup, Col, FormControl, ControlLabel, PageHeader, Radio, Panel} from 'react-bootstrap';
 var Filter = require('bad-words');
 var filter = new Filter();
 
@@ -14,16 +14,34 @@ class CreateGame extends React.Component {
       gameName: '',
       promptType: 'random',
       error: false,
-      roomType: 'ordinary'
+      roomType: 'ordinary',
+      password:"",
+      confirmPassword: ""
     };
-    this.handleChange = this.handleChange.bind(this);
+    this.handleGameNameChange = this.handleGameNameChange.bind(this);
     this.addGameToDB = this.addGameToDB.bind(this);
     this.handlePromptTypeSelection = this.handlePromptTypeSelection.bind(this);
     this.handleOptionChange = this.handleOptionChange.bind(this);
+    this.validatePassword = this.validatePassword.bind(this);
+    this.handlePasswordChange = this.handlePasswordChange.bind(this);
+    this.handleConfirmPassword = this.handleConfirmPassword.bind(this);
   }
 
-  handleChange(event) {
-    var filteredGameName = filter.clean(event.target.value)
+  handlePasswordChange(event) {
+    this.setState({password : event.target.value});
+  }
+
+  handleConfirmPassword(event) {
+    this.setState({confirmPassword : event.target.value});
+  }
+
+  validatePassword(oldPass, confPass) {
+    console.log(oldPass === confPass);
+    return oldPass === confPass;
+  }
+
+  handleGameNameChange(event) {
+    var filteredGameName = filter.clean(event.target.value);
     this.setState({gameName: filteredGameName});
   }
 
@@ -72,37 +90,70 @@ class CreateGame extends React.Component {
 
     const errorMessage = <p><b>That game name has already been taken. Please try again with a different game name!</b></p>
     let password = null;
-    if(this.state.roomType === 'private') {
-      //fill in onChange = {}
-      password = <input placeholder="Room password" type="password" /> ;
+    if(this.props.private) {
+      password = (
+        <span>
+        <input placeholder="Room password" type="password" id="password" onChange={this.handlePasswordChange} required={true}/> 
+        <br />
+        <br />
+        <input placeholder="Confirm password" type="password" id="confirm_password" onChange={this.handleConfirmPassword} required={true}/>
+        </span>) ;
     }
-    //<FormGroup>
-      //    <Radio checked inline onClick={this.handleCreateOrdinaryRoom}>Orinary Room</Radio>
-       //   <Radio inline onClick={this.handleCreatePrivateRoom}>Passowrd protected Room</Radio>
-       // </FormGroup>
-
+    
     return (
+      //form on submit, add a validatePassword function
       <div id="create-game">
-        <h4>Start a New Game</h4>
-          <form>
-          <label>
-            <input type="radio" value="ordinary" checked={this.state.roomType==='ordinary'} onChange={this.handleOptionChange}/>Orindary room 
-          </label>
-          <label>
-            <input type="radio" value="private" checked={this.state.roomType==='private'} onChange={this.handleOptionChange} />Password protected room
-          </label>
-          </form>
           {this.state.error && errorMessage}
+          <br/>
+        <form>
+        <FormGroup>
+          <Col>
+            <input type="text" placeholder="Name your game..." onChange={this.handleGameNameChange} value={this.state.gameName}/>
+          </Col>
+        </FormGroup>
 
-          <input placeholder="Name your game..." type="text" value={this.state.gameName} onChange={this.handleChange} />
-          {password}
-          <DropdownButton bsSize="small" title='Prompt-Type' id='0'>
-            <MenuItem eventKey="1" onSelect={() => this.handlePromptTypeSelection('random')}>Random</MenuItem>
-            <MenuItem eventKey="2" onSelect={() => this.handlePromptTypeSelection('user-generated')}>User-generated</MenuItem>
-          </DropdownButton>
-          <Button bsSize="small" onClick={() => this.addGameToDB(this.state.gameName, this.state.promptType, this.props.sendToGame)}>Submit</Button>
+        <FormGroup>
+            <Col>
+              {password}
+            </Col>
+        </FormGroup>
+
+        <DropdownButton bsSize="small" title="Prompt-Type" id="0">
+          <MenuItem eventKey="1" onSelect={() => this.handlePromptTypeSelection('random')}>Random</MenuItem>
+          <MenuItem eventKey="2" onSelect={() => this.handlePromptTypeSelection('user-generated')}>user-generated</MenuItem>
+        </DropdownButton>
+        <br />
+        <br />
+        <Button bsSize="small" onClick={() => {
+
+          if (this.validatePassword(this.state.password,
+            this.state.confirmPassword)) {
+            this.addGameToDB(this.state.gameName, this.state.promptType, this.props.sendToGame);
+          } else {
+            alert('Please enter the same password!');
+          }
+          }}>Submit</Button>
+        {"       "}
+        <Button bsSize="small" onClick={sendToLobby}>Cancel</Button>
+      </form> 
       </div>
     )
   }
 }
 export default CreateGame;
+//replace the silly string spacing
+//onClick={} add this to the Cancel button
+
+
+
+
+
+
+
+
+
+
+
+
+
+
