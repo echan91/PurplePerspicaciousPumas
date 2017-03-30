@@ -14,7 +14,8 @@ class Game extends React.Component {
     super(props)
     this.state = {
       game: null,
-      username: null
+      username: null,
+      timer: null
     };
 
     this.getGameData = this.getGameData.bind(this);
@@ -24,7 +25,7 @@ class Game extends React.Component {
     this.handlePromptSubmission = this.handlePromptSubmission.bind(this);
     this.handleJudgeSelection = this.handleJudgeSelection.bind(this);
     this.handleReadyToMoveOn = this.handleReadyToMoveOn.bind(this);
-
+    
     socket.on('update waiting room', (gameObj) => {
       this.setState({game: gameObj});
     })
@@ -50,7 +51,6 @@ class Game extends React.Component {
       console.log('disconnectTimeOut')
       this.props.route.sendToLobby.call(this, true);
     })
-
   }
 
   componentDidMount() {
@@ -144,6 +144,7 @@ class Game extends React.Component {
   render() {
     return (
       <div id="game">
+      <div> {this.state.timer} </div>
         {this.state.game && this.state.username && this.state.game.gameStage === 'waiting' && <WaitingRoom game={this.state.game} user={this.state.username} sendToLobby={this.props.route.sendToLobby} leaveGame={this.leaveGame} />}
         {this.state.game && this.state.username && this.state.game.gameStage === 'playing' && <PlayingGame game={this.state.game} user={this.state.username} handleResponse={this.handleResponse} handlePromptSubmission={this.handlePromptSubmission} handleJudgeSelection={this.handleJudgeSelection} handleReadyToMoveOn={this.handleReadyToMoveOn}/>}
         {this.state.game && this.state.username && this.state.game.gameStage === 'gameover' && <EndOfGame game={this.state.game} sendToLobby={this.props.route.sendToLobby}/>}

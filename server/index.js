@@ -113,9 +113,17 @@ var io = require('socket.io')(server);
 
 var Sockets = {};
 var Rooms = {};
-
+let i = 0;
 io.on('connection', (socket) => {
   console.log('a user connected to the socket');
+
+  socket.on('testing', (data) => {
+    console.log('testing', data)
+    let time = data.time;
+    setInterval(()=> {
+      io.emit('timer', {time: time-=1});
+    }, 1000)
+  })
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username

@@ -6,6 +6,8 @@ import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
 import { Button, Form, FormGroup, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
+import io from 'socket.io-client';
+const socket = io();
 
 //TODO:
   // build logic to prevent users from joining a full game
@@ -15,14 +17,21 @@ class Lobby extends React.Component {
     super(props)
     this.state = {
       games: null,
-      username: null
+      username: null,
+      timer: null
     }
     this.getGames = this.getGames.bind(this);
+    socket.on('timer', (data) => {
+      this.setState({
+        timer: data.time
+      })
+    })
   }
 
   componentDidMount() {
     this.getGames();
     this.getUsername();
+    socket.emit('testing', {'time':5});
   }
 
   getGames() {
@@ -57,9 +66,13 @@ class Lobby extends React.Component {
   }
 
   render() {
+    if (this.state.timer === 0) {
+      socket.emit('testing',{'time':5})
+    }
     return (
 
       <Col id="lobby" sm={6} smOffset={3}>
+        <div> {this.state.timer} </div>
         <PageHeader>Lobby</PageHeader>
         {this.props.params.disconnectTimeOut && <PlayerDisconnected/>}
         <CreateGame sendToGame={this.props.route.sendToGame}/>
