@@ -30,10 +30,6 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-
-// mongoose.connect('mongodb://localhost/passport_local_mongoose_express4');
-
-
 app.post('/signup', function (req, res) {
   console.log('User tried to sign up', req.body.username);
   User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function (err, user) {
@@ -113,92 +109,132 @@ var io = require('socket.io')(server);
 
 var Sockets = {};
 var Rooms = {};
-let i = 0;
-io.on('connection', (socket) => {
-  console.log('a user connected to the socket');
+var Games = {}
 
-  socket.on('testing', (data) => {
-    console.log('testing', data)
-    let time = data.time;
-    setInterval(()=> {
-      io.emit('timer', {time: time-=1});
-    }, 1000)
-  })
+io.on('connection', (socket) => {
+  console.log(`A user connected to the socket`);
+
+/*********************************
+  TESTING LOGIC HERE IGNORE
+***********************************/
+  // socket.on('testing', (data) => {
+  //   Sockets.time = data.time;
+  //   if (Sockets.timer) {
+  //     clearInterval(Sockets.timer);
+  //   }
+  //   Sockets.timer = setInterval(()=> {
+  //     console.log(Sockets.time);
+  //     io.emit('timer', {time: Sockets.time-=1});
+  //     if (Sockets.time === 1) {
+  //       console.log('it works!');
+  //       clearInterval(Sockets.timer);
+  //     }
+  //   }, 1000)
+  // })
+
+  // socket.on('stoptimer', (data) => {
+  //   console.log('timer stopped', Sockets.timer);
+  //   clearInterval(Sockets.timer);
+  // })
+/*********************************
+  TESTING LOGIC HERE 
+***********************************/
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
-    console.log('client joining room: ', data);
-    socket.join(data.gameName);
-    var username = data.username;
-    var gameName = data.gameName;
-    Sockets[socket] = gameName;
+    const { username, gameName } = data;
+
+    console.log(`${username} is joining room: ${gameName}`);
+    socket.join(gameName);
+
+/**************************************************************
+  Instantiates gameTimer information
+***************************************************************/
+
+    let gameTimerInformation = Games[gameName] = {
+      timer: null,
+      time: null
+    }
+
+/**************************************************************
+  Instantiates gameTimer information
+***************************************************************/
+
+    let gameInfo = Sockets[socket] = {
+      gameName: gameName
+    }
+    console.log(`Sockets: ${Sockets[socket].gameName}`);
+
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
+    console.log(`Rooms: ${Rooms[gameName]}`);
+
     queries.retrieveGameInstance(gameName)
-    .then(function (game){
-      console.log('joining game', game)
-    // add client to game DB if they're not already in players list
+    .then(game => {
+      // add client to game DB if they're not already in players list
       if (!game.players.includes(username)) {
-        var players = game.players.slice(0);
-        players.push(username);
-        return queries.addPlayerToGameInstance(gameName, players);
+        return queries.addPlayerToGameInstance(gameName, username);
       }
-    }).then(function () {
-      return queries.retrieveGameInstance(gameName);
-    }).then(function (game) {
-    // then, check num of players in players list
-      // if it's 4 and gameStage is waiting
-      if (game.players.length === 4 && game.gameStage === 'waiting') {
-        // update gameStage in db from waiting to playing
-        return queries.setGameInstanceGameStageToPlaying(gameName)
-        .then(function () {
-          return queries.retrieveGameInstance(gameName)
-          .then(function (game) {
-          // emit 'start game' event and send the game instance obj
-            io.to(gameName).emit('start game', game);
-          })
-        });
-      } else {
-        console.log('joined, game: ', game);
-        io.to(gameName).emit('update waiting room', game);
-      }
-    }).catch(function(error) {
-      console.log(error)
-      throw error;
     })
+    .then(game => {
+      const { players, gameStage } = game.value;
+      console.log('DATA!', players.length, gameStage);
+
+      if (players.length === 4 && gameStage === 'waiting') {
+        queries.setGameInstanceGameStageToPlaying(gameName)
+          .then(game => {
+            console.log('Starting game: ', game.value)
+            io.to(gameName).emit('start game', game.value)
+
+/*******************************************************************
+EMIT START ROUND TIMER HERE
+******/
+
+            gameTimerInformation.time = 15; //This sets our game time
+            gameTimerinformation.timer = setInterval( ()=> {
+              io.to(gameName).emit('timer', {time: gameTimerInformation.time -= 1})
+              if (gameTimerInformation.time === 0) { //When our timer hits 0, stop our timer
+                clearInterval(gameTimerInformation.timer)
+                // io.to(gameName).emit('start next round')
+              }
+            }, 1000)
+
+/*****
+EMIT START ROUND TIMER HERE
+**********************************************************************/
+          });
+      } else {
+        console.log('Joining Game: ', game.value);
+        io.to(gameName).emit('update waiting room', game.value);
+      }
+    })
+    .catch(error => console.log(error))
   });
 
   socket.on('leave game', (data) => {
-    console.log('client leaving room: ', data);
-    // Get the username and gameName
     const { username, gameName } = data;
-    // Query for game instance
+
     queries.retrieveGameInstance(gameName)
       .then(game => {
-        // If username found in array then remove
-        console.log('GAME INFO ON LEAVING GAME', game);
         if (game.players.includes(username)) {
           let currentPlayers = game.players.filter(player => player !== username);
-          // Update record
-          return queries.addPlayerToGameInstance(gameName, currentPlayers);
+
+          return queries.removePlayerFromGameInstance(gameName, username);
         } else {
-          // Else throw error
           console.log('Error, username not found');
           return 'Error';
         }
       })
-      .then( () => queries.retrieveGameInstance(gameName) )
-      // Emit 'update waiting room'
-      .then( game => {
-        if (game.players.length > 0) {
-          io.to(gameName).emit('update waiting room', game)
+      .then(game => {
+        if (game.value.players.length > 0) {
+          io.to(gameName).emit('update waiting room', game.value)
         } else {
-          // Remove game from DB
+          // If number of players is now zero then destroy that room
           queries.destroyGameInstance(gameName);
         }
-        // If number of players is now zero then leave that socket?
-        console.log('Leaving room: ', gameName);
+        console.log(`${username} is leaving room: ${gameName}`);
         socket.leave(gameName);
       })
+      .catch(error => console.log(error))
   });
 
   socket.on('prompt created', (data) => {
@@ -246,9 +282,34 @@ io.on('connection', (socket) => {
         return queries.updateRounds(gameName, currentRounds)
         .then(function() {
           if (currentRounds[currentRound].responses.length === 3) {
+/*********************************
+  CLEAR GAME'S TIMEOUT
+***********************************/
+            clearInterval(Games.gameName.timer)
+
+/*********************************
+  CLEAR GAME'S TIMEOUT
+***********************************/
             return queries.retrieveGameInstance(gameName)
             .then(function(game) {
               io.to(gameName).emit('start judging', game);
+/*********************************
+  START JUDGING TIMER
+***********************************/
+              Games.gameName.time = 15;
+
+              Games.gameName.timer = setInterval( () => {
+                io.to(gameName).emit('timer', {time: Games.gameName.time -= 1})
+                if (Games.gameName.time === 0) {
+                  clearInterval(Games.gameName.timer);
+                  //NEED TO EMIT TO FORCE JUDGE TO EMIT A RESPONSE
+                }
+              }, 1000)
+
+/*********************************
+  START JUDGING TIMER
+***********************************/
+
             })
           }
         })
@@ -258,11 +319,6 @@ io.on('connection', (socket) => {
       throw error;
     })
   })
-
-    // check if there are 3 responses
-      // if there are 3 responses go to current Round in round array and increment stage by 1
-      // retrieve updated game from DB
-      // emit 'start judging' with game instance obj as data
 
   // on 'judge selection'
   socket.on('judge selection', (data) => {
@@ -283,6 +339,13 @@ io.on('connection', (socket) => {
         queries.retrieveGameInstance(gameName)
         .then(function (game) {
             if (game.currentRound < 3) {
+/************************
+  CLEAR INTERVAL IF JUDGE HAS SELECTED
+*************************/
+              clearInterval(Games.gameName.timer)
+/************************
+  CLEAR INTERVAL IF JUDGE HAS SELECTED
+*************************/
               console.log('winner');
               io.to(gameName).emit('winner chosen', game);
             } else {
@@ -322,6 +385,20 @@ io.on('connection', (socket) => {
               queries.retrieveGameInstance(gameName)
               .then(function(game) {
                 io.to(gameName).emit('start next round', game);
+
+/**********************************************
+  CLEAR INTERVAL and SET INTERVAL FOR NEXT ROUND
+**********************************************/
+                clearInterval(Games.gameName.timer)
+                Games.gameName.time = 20
+                Games.gameName.timer = setInterval( () => {
+                  io.to(gameName).emit('timer', {time: Games.gameName.time})
+                }, 1000)
+
+/**********************************************
+  CLEAR INTERVAL and SET INTERVAL FOR NEXT ROUND
+**********************************************/
+
               })
             })
           }
@@ -334,38 +411,38 @@ io.on('connection', (socket) => {
   })
 
 
-  socket.on('disconnect', (data) => {
-    if (Rooms[Sockets[socket]]) {
-      Rooms[Sockets[socket]]--;
-      var timer = 60;
-      var disconnectTimeOut = function() {
-        setTimeout(function(){
-          if (timer === 0 && Rooms[Sockets[socket]] < 4) {
-            console.log('disconnectTimeOut')
-            queries.setGameInstanceGameStageToGameOver(Sockets[socket])
-            .then(function(){
-              console.log(Sockets[socket]);
-                io.to(Sockets[socket]).emit('disconnectTimeOut');
-            })
-          } else {
-            if (Rooms[Sockets[socket]] < 4) {
-              console.log(timer, Rooms[Sockets[socket]]);
-              timer = timer - 1;
-              disconnectTimeOut();
-            }
-          }
-        }, 1000);
-      }
-      queries.retrieveGameInstance(Sockets[socket])
-      .then(function(game) {
-        if (game.gameStage === 'playing') {
-          disconnectTimeOut();
-        }
-      });
-    }
+  // socket.on('disconnect', (data) => {
+  //   if (Rooms[Sockets[socket].gameName]) {
+  //     Rooms[Sockets[socket].gameName]--;
+  //     var timer = 60;
+  //     var disconnectTimeOut = function() {
+  //       setTimeout(function(){
+  //         if (timer === 0 && Rooms[Sockets[socket]] < 4) {
+  //           console.log('disconnectTimeOut')
+  //           queries.setGameInstanceGameStageToGameOver(Sockets[socket])
+  //           .then(function(){
+  //             console.log(Sockets[socket]);
+  //               io.to(Sockets[socket]).emit('disconnectTimeOut');
+  //           })
+  //         } else {
+  //           if (Rooms[Sockets[socket]] < 4) {
+  //             console.log(timer, Rooms[Sockets[socket]]);
+  //             timer = timer - 1;
+  //             disconnectTimeOut();
+  //           }
+  //         }
+  //       }, 1000);
+  //     }
+  //     queries.retrieveGameInstance(Sockets[socket])
+  //     .then(function(game) {
+  //       if (game.gameStage === 'playing') {
+  //         disconnectTimeOut();
+  //       }
+  //     });
+  //   }
 
-    console.log('a user disconnected', data);
-  });
+  //   console.log('a user disconnected', data);
+  // });
 
 });
 

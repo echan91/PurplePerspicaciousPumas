@@ -21,13 +21,31 @@ class Lobby extends React.Component {
       timer: null
     }
     this.getGames = this.getGames.bind(this);
+    /* 
+      TESTING TIMER LOGIC PLEASE DELIETE LINES BETWEEN HERE
+    */
     socket.on('timer', (data) => {
       this.setState({
         timer: data.time
       })
     })
+    /*
+      TESTING TIMER LOGIC PLEASE DELETE LINES BETWEEN HERE
+    */
+
+
   }
 
+
+  /* 
+    TESTING TIMER LOGIC PLEASE DELIETE LINES BETWEEN HERE
+  */
+  stopTimer() {
+    socket.emit('stoptimer')
+  }
+  /*
+    TESTING TIMER LOGIC PLEASE DELETE LINES BETWEEN HERE
+  */
   componentDidMount() {
     this.getGames();
     this.getUsername();
@@ -73,6 +91,7 @@ class Lobby extends React.Component {
 
       <Col id="lobby" sm={6} smOffset={3}>
         <div> {this.state.timer} </div>
+        <button onClick={()=>{this.stopTimer()}}> Test Click </button>
         <PageHeader>Lobby</PageHeader>
         {this.props.params.disconnectTimeOut && <PlayerDisconnected/>}
         <CreateGame sendToGame={this.props.route.sendToGame}/>

@@ -71,13 +71,13 @@ class PlayingGame extends React.Component{
             {stage !== -1 && <Prompt prompt={curPrompt}/>}
           </Col>
         <Col sm={6} smOffset={3}>
-        {stage === -1 && this.state.role === 'judge' && <CreatePrompt handlePromptSubmission={this.props.handlePromptSubmission}/>}
-        {stage === -1 && this.state.role === 'player' && <JudgeCreatingPrompt judge={curJudge}/>}
-        {stage === 0 && this.state.role === 'judge' && <PlayersResponding />}
-        {stage === 0 && this.state.role === 'player' && <RespondToPrompt handleResponse={this.props.handleResponse}/>}
-        {stage === 1 && this.state.role === 'judge' && <ChooseWinner responses={responses} handleJudgeSelection={this.props.handleJudgeSelection}/>}
-        {stage === 1 && this.state.role === 'player' && <SeeResponses responses={responses}/>}
-        {stage === 2 && <Winner responses={responses} winner={winner} handleReadyToMoveOn={this.props.handleReadyToMoveOn}/>}
+        {stage === -1 && this.state.role === 'judge' && <CreatePrompt time={this.props.time} handlePromptSubmission={this.props.handlePromptSubmission}/>}
+        {stage === -1 && this.state.role === 'player' && <JudgeCreatingPrompt time={this.props.time} judge={curJudge}/>}
+        {stage === 0 && this.state.role === 'judge' && <PlayersResponding time={this.props.time} />}
+        {stage === 0 && this.state.role === 'player' && <RespondToPrompt time={this.props.time} handleResponse={this.props.handleResponse}/>}
+        {stage === 1 && this.state.role === 'judge' && <ChooseWinner time={this.props.time} responses={responses} handleJudgeSelection={this.props.handleJudgeSelection}/>}
+        {stage === 1 && this.state.role === 'player' && <SeeResponses time={this.props.time} responses={responses}/>}
+        {stage === 2 && <Winner time={this.props.time} responses={responses} winner={winner} handleReadyToMoveOn={this.props.handleReadyToMoveOn}/>}
         </Col>
       </Col>
     )
