@@ -12,8 +12,15 @@ const GameListEntry = (props) => {
 
   let promptType = props.game.rounds[0].stage === 0 ? 'Random' : 'User-Generated';
 
+  let room = props.name;
+  if (props.game.password) {
+  	room = (<b>private {room}</b>);
+  }
+
   return (
-    <ListGroupItem header={props.name} onClick={() => props.sendToGame(props.name)}><em>Prompt Type:</em> {promptType} | <em>Current Players:</em> {playerList}</ListGroupItem>
+  	<div>
+    <ListGroupItem header={room} onClick={() => props.sendToGame(props.name)}><em>Prompt Type:</em> {promptType} | <em>Current Players:</em> {playerList}</ListGroupItem>
+    </div>
   )
 }
 
