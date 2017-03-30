@@ -3,13 +3,7 @@ import React from 'react';
 import { ListGroupItem } from 'react-bootstrap';
 
 export default (props) => {
-
-  var playerList = '';
-
-  props.game.players.forEach(function(player) {
-    playerList += (player + ', ');
-  })
-
+  let playerList = props.game.players.join(', ');
   let promptType = props.game.rounds[0].stage === 0 ? 'Random' : 'User-Generated';
 
   return (
