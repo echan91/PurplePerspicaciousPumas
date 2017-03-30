@@ -1,7 +1,7 @@
 'use strict';
 import React from 'react';
 import $ from 'jquery';
-import { DropdownButton, MenuItem, Button, Form, FormGroup, Col, FormControl, ControlLabel, PageHeader, Radio, Panel} from 'react-bootstrap';
+import { DropdownButton, MenuItem, Button, Form, FormGroup, Col, FormControl, ControlLabel, PageHeader} from 'react-bootstrap';
 var Filter = require('bad-words');
 var filter = new Filter();
 
