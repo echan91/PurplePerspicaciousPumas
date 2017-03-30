@@ -14,13 +14,26 @@ const GameListEntry = (props) => {
 
   let room = props.name;
   if (props.game.password) {
-  	room = (<b>private {room}</b>);
+  	room = (<b>*(Private) {room}</b>);
   }
 
   return (
-  	<div>
-    <ListGroupItem header={room} onClick={() => props.sendToGame(props.name)}><em>Prompt Type:</em> {promptType} | <em>Current Players:</em> {playerList}</ListGroupItem>
-    </div>
+    <ListGroupItem header={room} onClick={() => {
+    	if (props.game.password) {
+
+	    	let pass = prompt('Please enter room password: ');
+	    	while(pass !== null && pass !== props.game.password) {
+	    	    pass = prompt('Please enter room password: ');
+	    	}
+	    	if(pass !== null) {
+		    	props.sendToGame(props.name);
+	    	}
+    	} else {
+	    	props.sendToGame(props.name);
+	    }
+	}}>
+    	<em>Prompt Type:</em> {promptType} | <em>Current Players:</em> {playerList}
+    </ListGroupItem>
   )
 }
 

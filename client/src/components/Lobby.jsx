@@ -74,7 +74,6 @@ class Lobby extends React.Component {
   }
 
   render() {
-
    const currentGames = (
     <div>
       <h4>Current Games:</h4>
@@ -83,9 +82,9 @@ class Lobby extends React.Component {
 
    let mainPanel = currentGames;
    if (this.state.private === 1) {
-    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={false} handlePrivateState={this.handlePrivateState}/> ;
+    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/> ;
    } else if(this.state.private === -1) {
-    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} sendToLobby={this.props.route.sendToLobby}private={true} handlePrivateState={this.handlePrivateState}/>;
+    mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
 
    }
 
