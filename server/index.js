@@ -74,6 +74,7 @@ app.get('/games', function(req, res) {
 
 app.post('/games', function(req, res) {
   var gameInstance = req.body;
+  console.log('Game Instance: ', gameInstance);
 
   helpers.addPrompts(gameInstance);
 
@@ -107,11 +108,21 @@ var server = app.listen(port, function() {
 
 var io = require('socket.io')(server);
 
-var Sockets = {};
-var Rooms = {};
+const Sockets = {};
+const Rooms = {};
+const lobbyChatMessages = [];
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
+
+  socket.on('join lobby', data => {
+    const username = data.username;
+    console.log(`${username} has joined the lobby!`)
+    socket.join('lobby');
+
+    // Send current chat messages to new user that joined
+    io.to('lobby').emit('chat updated', lobbyChatMessages);
+  })
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
@@ -281,10 +292,11 @@ io.on('connection', (socket) => {
 
   socket.on('ready to move on', (data) => {
     console.log('rdy');
-    var gameName = data.gameName;
-    var username = data.username;
+    const { username, gameName } = data;
+
     queries.retrieveGameInstance(gameName)
-    .then(function(game) {
+    .then(game => {
+      console.log('Ready to move on game data: ', game);
       var currentRound = game.currentRound;
       var Rounds = game.rounds.slice(0);
       if (!Rounds[currentRound].ready.includes(username)) {
@@ -342,6 +354,14 @@ io.on('connection', (socket) => {
     }
 
     console.log('a user disconnected', data);
+  });
+
+  // LOBBY CHAT
+  socket.on('message', (data) => {
+    console.log('Message received: ', data);
+    lobbyChatMessages.push(data);
+    console.log('Current chat: ', lobbyChatMessages);
+    io.to('lobby').emit('chat updated', lobbyChatMessages);
   });
 
 });
