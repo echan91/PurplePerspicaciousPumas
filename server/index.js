@@ -111,20 +111,20 @@ var Sockets = {};
 var Rooms = {};
 
 io.on('connection', (socket) => {
-  console.log('a user connected to the socket');
+  console.log(`A user connected to the socket`);
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
-    console.log('Client joining room: ', data);
-    socket.join(data.gameName);
-
     const { username, gameName } = data;
 
+    console.log(`${username} is joining room: ${gameName}`);
+    socket.join(gameName);
+
     Sockets[socket] = gameName;
-    console.log(Sockets[socket]);
+    console.log(`Sockets: ${Sockets[socket]}`);
 
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
-    console.log(Rooms[gameName]);
+    console.log(`Rooms: ${Rooms[gameName]}`);
 
     queries.retrieveGameInstance(gameName)
     .then(game => {
@@ -148,44 +148,34 @@ io.on('connection', (socket) => {
         io.to(gameName).emit('update waiting room', game.value);
       }
     })
-    .catch(function(error) {
-      console.log(error)
-      throw error;
-    })
+    .catch(error => console.log(error))
   });
 
   socket.on('leave game', (data) => {
-    console.log('client leaving room: ', data);
-    // Get the username and gameName
     const { username, gameName } = data;
-    // Query for game instance
+
     queries.retrieveGameInstance(gameName)
       .then(game => {
-        // If username found in array then remove
-        console.log('GAME INFO ON LEAVING GAME', game);
         if (game.players.includes(username)) {
           let currentPlayers = game.players.filter(player => player !== username);
-          // Update record
+
           return queries.removePlayerFromGameInstance(gameName, username);
         } else {
-          // Else throw error
           console.log('Error, username not found');
           return 'Error';
         }
       })
-      .then( () => queries.retrieveGameInstance(gameName) )
-      // Emit 'update waiting room'
-      .then( game => {
-        if (game.players.length > 0) {
-          io.to(gameName).emit('update waiting room', game)
+      .then(game => {
+        if (game.value.players.length > 0) {
+          io.to(gameName).emit('update waiting room', game.value)
         } else {
-          // Remove game from DB
+          // If number of players is now zero then destroy that room
           queries.destroyGameInstance(gameName);
         }
-        // If number of players is now zero then leave that socket?
-        console.log('Leaving room: ', gameName);
+        console.log(`${username} is leaving room: ${gameName}`);
         socket.leave(gameName);
       })
+      .catch(error => console.log(error))
   });
 
   socket.on('prompt created', (data) => {
