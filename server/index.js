@@ -119,6 +119,7 @@ var lobbyChatMessages = [];
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
+  console.log(socket.id);
 
   socket.on('join lobby', data => {
     var username = data.username;
@@ -155,25 +156,6 @@ io.on('connection', (socket) => {
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
     console.log(`Rooms: ${Rooms[gameName]}`);
 
-/************************
-*************************/
-    // Games[gameName] = {
-    //   time: null,
-    //   timer: null
-    // }
-    // Games[gameName].time = 15;
-    // Games[gameName].timer = setInterval( () => {
-    //   io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
-    //   console.log('counting', Games[gameName].time);
-    //   if (Games[gameName].time === 0) {
-    //     console.log('it finished!');
-    //     clearInterval(Games[gameName].timer)
-    //   }
-    // }, 1000)
-    // console.log('GAMES OBJ', Games[gameName]);
-/************************
-*************************/
-
     queries.retrieveGameInstance(gameName)
     .then(game => {
       // add client to game DB if they're not already in players list
@@ -189,6 +171,8 @@ io.on('connection', (socket) => {
         queries.setGameInstanceGameStageToPlaying(gameName)
           .then(game => {
             console.log('Starting game: ', game.value)
+            var dummyGameRoom = Object.assign({},game.value,{gameStage:'waiting'});
+            io.to(gameName).emit('update waiting room', dummyGameRoom);
 /*************************************************************
 LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
 **************************************************************/
@@ -196,12 +180,12 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
               time: null,
               timer: null
             }
-            Games[gameName].time = 11;
+            Games[gameName].time = 5;
             Games[gameName].timer = setInterval( () => {
               io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
               console.log('counting', Games[gameName].time);
               if (Games[gameName].time === 0) {
-                console.log('it finished!');
+                console.log('Game Starting!');
                 clearInterval(Games[gameName].timer)
                 io.to(gameName).emit('timer',{time: null})
                 io.to(gameName).emit('start game', game.value)
@@ -326,8 +310,48 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
         .then(function (game) {
             if (game.currentRound < 3) {
               io.to(gameName).emit('winner chosen', game);
+              Games[gameName] = {
+                time: null,
+                timer: null
+              }
+              console.log('checking Games[gameName]', Games[gameName])
+              Games[gameName].time = 5;
+              clearInterval(Games[gameName].timer)
+              Games[gameName].timer = setInterval( () => {
+                console.log('starting countdown to next round');
+                io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+                if (Games[gameName].time === 0) {
+                  clearInterval(Games[gameName].timer)
+                  io.to(gameName).emit('timer',{time: null})
+/*****************************************
+******************************************/
+                  queries.retrieveGameInstance(gameName)
+                  .then(game => {
+                    console.log('Ready to move on game data: ', game);
+                    var currentRound = game.currentRound;
+                    var Rounds = game.rounds.slice(0);
+                      queries.updateRounds(gameName, Rounds)
+                      .then(function() {
+                        currentRound++;
+                        queries.updateCurrentRound(gameName, currentRound)
+                        .then(function() {
+                          queries.retrieveGameInstance(gameName)
+                          .then(function(game) {
+                            io.to(gameName).emit('start next round', game);
+                          })
+                        })
+                      })
+                  }).catch(function(error) {
+                    console.log(error);
+                    throw error;
+                  })
+                }
+              }, 1000)
+/*****************************************
+******************************************/
             } else {
               queries.setGameInstanceGameStageToGameOver(gameName).then(function () {
+                clearInterval(Games[gameName].timer)
                 queries.retrieveGameInstance(gameName).then(function (game) {
                   io.to(gameName).emit('game over', game);
                 })
@@ -340,55 +364,38 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
       throw error;
     })
   })
-  // 
-  socket.on('ready to move on', (data) => {
-    console.log('rdy');
-    var { username, gameName } = data;
+  
+  // socket.on('ready to move on', (data) => {
+  //   console.log('rdy', data);
+  //   var { username, gameName } = data;
 
-    queries.retrieveGameInstance(gameName)
-    .then(game => {
-      console.log('Ready to move on game data: ', game);
-      var currentRound = game.currentRound;
-      var Rounds = game.rounds.slice(0);
-      if (!Rounds[currentRound].ready.includes(username)) {
-        Rounds[currentRound].ready.push(username);
-        queries.updateRounds(gameName, Rounds)
-        .then(function() {
-          if (Rounds[currentRound].ready.length === 4) {
-            currentRound++;
-            queries.updateCurrentRound(gameName, currentRound)
-            .then(function() {
-              queries.retrieveGameInstance(gameName)
-              .then(function(game) {
-/***************************************************************
-  LOGIC TO AUTOMATICALLY START NEXT ROUND
-***************************************************************/
-                
-                // Games[gameName].time = 10;
-                // Games[gameName].timer = setInterval( () => {
-                //   io.to(gameName).emit('timer', {time: Games[gameName].time-=1})
-                //   console.log('counting', Games[gameName].time)
-                //   if (Games[gameName].time === 0) {
-                //     console.log('next round starting');
-                //     clearInterval(Games[gameName].timer)
-                //     io.to(gameName).emit('timer', {timer: null})
-                //     io.to(gameName).emit('start next round', game)
-                //   }
-                // })
-
-/***************************************************************
-***************************************************************/
-                // io.to(gameName).emit('start next round', game);
-              })
-            })
-          }
-        })
-      }
-    }).catch(function(error) {
-      console.log(error);
-      throw error;
-    })
-  })
+  //   queries.retrieveGameInstance(gameName)
+  //   .then(game => {
+  //     console.log('Ready to move on game data: ', game);
+  //     var currentRound = game.currentRound;
+  //     var Rounds = game.rounds.slice(0);
+  //     if (!Rounds[currentRound].ready.includes(username)) {
+  //       Rounds[currentRound].ready.push(username);
+  //       queries.updateRounds(gameName, Rounds)
+  //       .then(function() {
+  //         if (Rounds[currentRound].ready.length === 4) {
+  //           currentRound++;
+  //           queries.updateCurrentRound(gameName, currentRound)
+  //           .then(function() {
+  //             queries.retrieveGameInstance(gameName)
+  //             .then(function(game) {
+  //               console.log('starting next round', game);
+  //               io.to(gameName).emit('start next round', game);
+  //             })
+  //           })
+  //         }
+  //       })
+  //     }
+  //   }).catch(function(error) {
+  //     console.log(error);
+  //     throw error;
+  //   })
+  // })
 
             // Games[gameName] = {
             //   time: null,

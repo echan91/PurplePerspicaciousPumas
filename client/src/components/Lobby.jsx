@@ -2,7 +2,7 @@
 import React from 'react';
 import GameList from './GameList.jsx';
 import $ from 'jquery';
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
 import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
@@ -10,7 +10,7 @@ import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormCont
 
 
 // TODO: build logic to prevent users from joining a full game
-const lobbyChat = io();
+// const lobbyChat = io();
 
 class Lobby extends React.Component {
   constructor(props) {
@@ -25,16 +25,16 @@ class Lobby extends React.Component {
     };
 
 
-    lobbyChat.on('chat updated', messages => {
-      this.setState({chatroom: messages});
-      console.log('Current client side chat: ', this.state.chatroom);
-    });
+    // lobbyChat.on('chat updated', messages => {
+    //   this.setState({chatroom: messages});
+    //   console.log('Current client side chat: ', this.state.chatroom);
+    // });
 
-    lobbyChat.on('user joined lobby', userList => {
-      console.log(userList);
-      this.setState({lobbyUsers: userList});
-      console.log('Current lobby users: ', this.state.lobbyUsers);
-    });
+    // lobbyChat.on('user joined lobby', userList => {
+    //   console.log(userList);
+    //   this.setState({lobbyUsers: userList});
+    //   console.log('Current lobby users: ', this.state.lobbyUsers);
+    // });
 
     this.getGames = this.getGames.bind(this);
     this.sendMessageToChatroom = this.sendMessageToChatroom.bind(this);

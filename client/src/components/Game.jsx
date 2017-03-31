@@ -27,6 +27,7 @@ class Game extends React.Component {
     this.handleReadyToMoveOn = this.handleReadyToMoveOn.bind(this);
 
     socket.on('update waiting room', (gameObj) => {
+      //{gameStage: 'waiting'}
       this.setState({game: gameObj});
     })
     socket.on('start game', (gameObj) => {
@@ -44,18 +45,23 @@ class Game extends React.Component {
     socket.on('start next round', (gameObj) => {
       this.setState({game: gameObj});
     })
+
+    // socket.on('starting next round', (data) => {
+    //   // this.handleReadyToMoveOn();
+    //   this.handleReadyToMoveOn()
+    // })
+
     socket.on('game over', (gameObj) => {
       this.setState({game: gameObj});
     })
-    socket.on('disconnectTimeOut', () => {
-      // this function is related to the commented out function
-      // in server/index.js
-      console.log('disconnectTimeOut')
-      this.props.route.sendToLobby.call(this, true);
-    })
+    // socket.on('disconnectTimeOut', () => {
+    //   // this function is related to the commented out function
+    //   // in server/index.js
+    //   console.log('disconnectTimeOut')
+    //   this.props.route.sendToLobby.call(this, true);
+    // })
 
     socket.on('timer', (data) => {
-      console.log('hears it', data);
       this.setState({time: data.time})
     })
 
@@ -124,6 +130,7 @@ class Game extends React.Component {
   }
 
   handleReadyToMoveOn() {
+    console.log('move on triggered')
     socket.emit('ready to move on', {gameName: this.props.params.gamename, username: this.state.username});
   }
 
