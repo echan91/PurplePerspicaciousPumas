@@ -6,10 +6,11 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-var User = models.userModel;
-var Game = models.gameInstanceModel;
 var queries = require('../db/db-queries.js');
 var helpers = require('./helpers.js');
+
+var User = models.userModel;
+var Game = models.gameInstanceModel;
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -105,7 +106,7 @@ var server = app.listen(port, function() {
   console.log('App is listening on port: ', port);
 });
 
-//SOCKETS 
+//SOCKETS
 
 var io = require('socket.io')(server);
 
@@ -270,7 +271,7 @@ io.on('connection', (socket) => {
   })
 
 
-  // on 'judge selection' 
+  // on 'judge selection'
   socket.on('judge selection', (data) => {
     var gameName = data.gameName;
     var winner = data.winner;
@@ -301,7 +302,7 @@ io.on('connection', (socket) => {
       throw error;
     })
   })
-  // 
+  //
   socket.on('ready to move on', (data) => {
     console.log('rdy');
     const { username, gameName } = data;
@@ -384,4 +385,3 @@ io.on('connection', (socket) => {
   });
 
 });
-
