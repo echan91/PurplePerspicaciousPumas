@@ -112,14 +112,15 @@ var io = require('socket.io')(server);
 const Sockets = {};
 const Rooms = {};
 let userSockets = {};
-const allConnectedUsers = {};
-const connectedLobbyUsers = {};
+const allConnectedUsers = [];
+const connectedLobbyUsers = [];
 let lobbyUsers = [];
 let lobbyChatMessages = [];
 
 
 io.on('connection', (socket) => {
   console.log(`A user connected`);
+  console.log('Current games', Rooms);
 
   // DISCONNECT
   socket.on('disconnect', data => {
@@ -134,17 +135,17 @@ io.on('connection', (socket) => {
   socket.on('join lobby', data => {
     const username = data.username;
 
-    // Add user to the userSockets object so if they disconnect we know who it was.
-    userSockets[socket.id] = username;
-    console.log('Sockets', userSockets);
+    // Overwrite if same user connected from a new socket
+
+    allConnectedUsers.push({id: socket.id, username});
+    connectedLobbyUsers.push({id: socket.id, username});
+
+    console.log('All users', allConnectedUsers);
+    console.log('Users in lobby', connectedLobbyUsers);
 
     socket.join('lobby', console.log(`${username} has joined the lobby!`));
 
-    for (let username in userSockets) {
-      if (!lobbyUsers.includes(userSockets[username])) {
-        lobbyUsers.push(userSockets[username]);
-      }
-    }
+    lobbyUsers = connectedLobbyUsers.map(user => user.username);
 
     // Send current chat messages to any socket in the room
     io.to('lobby').emit('chat updated', lobbyChatMessages, console.log('Lobby users: ', lobbyUsers));
@@ -156,10 +157,16 @@ io.on('connection', (socket) => {
     console.log(typeof data.id);
     socket.leave('lobby');
 
-    let username = userSockets[data.id];
-    console.log('username that left is ', username)
+    // let username = userSockets[data.id];
+    let targetUser = connectedLobbyUsers.filter(user => user.id === data.id)[0];
+    console.log('target', targetUser);
+    console.log('username that left is ', targetUser.username)
     console.log('Lobby before', lobbyUsers);
-    lobbyUsers = lobbyUsers.filter(user => user !== username);
+    lobbyUsers = lobbyUsers.filter(user => user !== targetUser.username);
+
+    // Filter array of connected lobby users
+    connectedLobbyUsers.filter(user => user.id !== data.id);
+
     io.to('lobby').emit('user joined lobby', lobbyUsers);
     console.log('Lobby after someone left is', lobbyUsers);
   });
