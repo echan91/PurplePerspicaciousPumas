@@ -22,8 +22,8 @@ class Lobby extends React.Component {
       lobbyUsers: [],
       value: '',
       private: 0,
+      addFriend: false
     };
-
 
     lobbyChat.on('chat updated', messages => {
       this.setState({chatroom: messages});
@@ -41,6 +41,7 @@ class Lobby extends React.Component {
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
+    this.handleAddFriendByName = this.handleAddFriendByName.bind(this);
 
   }
 
@@ -103,9 +104,6 @@ class Lobby extends React.Component {
   handlePrivateState() {
     this.setState({private: 0});
   }
-//add the clicked usename to friendlist.
-//need to get the name clicked
-//need to get the current username (friend list should have the current user)
 
   handleAddFriend(event) {
     console.log(event);
@@ -119,7 +117,6 @@ class Lobby extends React.Component {
 
   addToFriendList(friend, currentUser) {
     $.ajax({
-      //where to???
       url: '/friends',
       method: 'POST',
       headers: {'content-type': 'application/json'},
@@ -131,6 +128,13 @@ class Lobby extends React.Component {
         console.log('error adding friend', err);
       }
     });
+  }
+
+  handleAddFriendByName() {
+    //toggle a flag here to showup the form
+    console.log('here!');
+    this.setState((prevState) => ({addFriend: !prevState.addFriend}));
+    console.log('there!');
   }
 
   render() {
@@ -151,9 +155,15 @@ class Lobby extends React.Component {
     let header = (<span>
       <span>Lobby Chat</span>
       {"    "}
-      <Button bsSize="xsmall" bsStyle="info">Add a friend by name
+      <Button bsSize="xsmall" bsStyle="info" onClick={this.handleAddFriendByName}>Add a friend by name
       </Button>
     </span>)
+    let addFriend = (<Form>
+      <FormControl>
+      </FormControl>
+      
+
+      </Form>);
 
 
     return (
@@ -171,6 +181,7 @@ class Lobby extends React.Component {
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
+          {addFriend}
         </Panel>
 
       </Col>
