@@ -6,7 +6,7 @@ import io from 'socket.io-client';
 import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
-import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
+import { ButtonToolbar, Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
 
 
 // TODO: build logic to prevent users from joining a full game
@@ -148,6 +148,13 @@ class Lobby extends React.Component {
       mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
     }
 
+    let header = (<span>
+      <span>Lobby Chat</span>
+      {"    "}
+      <Button bsSize="xsmall" bsStyle="info">Add a friend by name
+      </Button>
+    </span>)
+
 
     return (
       <Col id="lobby" sm={6} smOffset={3}>
@@ -158,7 +165,8 @@ class Lobby extends React.Component {
 
         <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
         <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
-        <Panel header="Users in Chat" bsStyle="primary">
+        {"             "}
+        <Panel header={header} bsStyle="primary">
           {this.state.lobbyUsers.map(user => (<div><span>{user}</span> <Button value={user} onClick={() => this.handleAddFriend(user)} >Add friend</Button></div>))}
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
