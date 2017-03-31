@@ -8,12 +8,13 @@ import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
 import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
 
+
 // TODO: build logic to prevent users from joining a full game
 const lobbyChat = io();
 
 class Lobby extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       games: null,
       username: null,
@@ -40,6 +41,7 @@ class Lobby extends React.Component {
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
+
   }
 
   componentDidMount() {
@@ -56,7 +58,7 @@ class Lobby extends React.Component {
         console.log('got games: ', data);
         this.setState({
           games: data
-        });
+        })
       },
       error: (err) => {
         console.log('error getting games: ', err);
@@ -117,10 +119,10 @@ class Lobby extends React.Component {
       mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
     }
 
+
     return (
       <Col id="lobby" sm={6} smOffset={3}>
         <PageHeader>Lobby</PageHeader>
-
         <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>
         {mainPanel}
@@ -133,6 +135,7 @@ class Lobby extends React.Component {
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
         </Panel>
+
       </Col>
 
     )

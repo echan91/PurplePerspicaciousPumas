@@ -47,6 +47,8 @@ class Game extends React.Component {
       this.setState({game: gameObj});
     })
     socket.on('disconnectTimeOut', () => {
+      // this function is related to the commented out function
+      // in server/index.js
       console.log('disconnectTimeOut')
       this.props.route.sendToLobby.call(this, true);
     })
@@ -60,24 +62,6 @@ class Game extends React.Component {
     this.getUsername();
   }
 
-  socketHandlers() {
-    //TODO: check best practice for socket events
-    // on 'start game', set game state to be data (game instance obj)
-
-    // emit 'submit response', send response and gamename and username as data to that socket room
-
-    // on 'start judging', set game state to new game instance obj data
-
-    // emit 'judge selection', send username of winner, gamename
-
-    // on 'winner chosen', update game state with new game instance obj
-
-    // emit 'ready to move on', send username and gamename
-
-    // on 'start next round', update game state with new game instance obj
-
-    // on 'game over', update game state w/ new game instance obj
-  }
 
   getGameData(gameName) {
     // use gameName to retrieve gameInstance obj of that game

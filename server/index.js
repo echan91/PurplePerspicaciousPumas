@@ -31,15 +31,14 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.post('/signup', function (req, res) {
-  console.log('User tried to sign up', req.body.username);
   User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function (err, user) {
     if (err) {
       console.log(err);
       return res.status(400).send(err);
     }
     console.log('registered User');
+
     passport.authenticate('local')(req, res, function() {
-      console.log('success', user);
       res.status(201).send('created');
     })
   });
@@ -106,6 +105,8 @@ var server = app.listen(port, function() {
   console.log('App is listening on port: ', port);
 });
 
+//SOCKETS 
+
 var io = require('socket.io')(server);
 
 const Sockets = {};
@@ -113,6 +114,7 @@ const Rooms = {};
 let userSockets = {};
 let lobbyUsers = [];
 let lobbyChatMessages = [];
+
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
@@ -152,6 +154,7 @@ io.on('connection', (socket) => {
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
     console.log(`Rooms: ${Rooms[gameName]}`);
 
+
     queries.retrieveGameInstance(gameName)
     .then(game => {
       // add client to game DB if they're not already in players list
@@ -172,6 +175,7 @@ io.on('connection', (socket) => {
       } else {
         console.log('Joining Game: ', game.value);
         io.to(gameName).emit('update waiting room', game.value);
+
       }
     })
     .catch(error => console.log(error))
@@ -220,7 +224,6 @@ io.on('connection', (socket) => {
       .then(function() {
         queries.retrieveGameInstance(gameName)
         .then(function(game) {
-          console.log('ADDED UPDATED GAME: ', game);
           io.to(gameName).emit('prompt added', game);
         })
       })
@@ -248,6 +251,10 @@ io.on('connection', (socket) => {
         //update rounds property of the game in DB w/ new responses and stage
         return queries.updateRounds(gameName, currentRounds)
         .then(function() {
+        // check if there are 3 responses
+          // if there are 3 responses go to current Round in round array and increment stage by 1
+          // retrieve updated game from DB
+          // emit 'start judging' with game instance obj as data
           if (currentRounds[currentRound].responses.length === 3) {
             return queries.retrieveGameInstance(gameName)
             .then(function(game) {
@@ -262,16 +269,11 @@ io.on('connection', (socket) => {
     })
   })
 
-    // check if there are 3 responses
-      // if there are 3 responses go to current Round in round array and increment stage by 1
-      // retrieve updated game from DB
-      // emit 'start judging' with game instance obj as data
 
-  // on 'judge selection'
+  // on 'judge selection' 
   socket.on('judge selection', (data) => {
     var gameName = data.gameName;
     var winner = data.winner;
-    console.log('judge selection', data.winner);
     queries.retrieveGameInstance(gameName)
     .then(function (game) {
       var currentRound = game.currentRound;
@@ -279,20 +281,15 @@ io.on('connection', (socket) => {
       var Rounds = game.rounds.slice(0);
       Rounds[currentRound].winner = winner;
       Rounds[currentRound].stage++;
-      console.log('rounds', Rounds);
       queries.updateRounds(gameName, Rounds)
       .then(function () {
-        console.log('gameName', gameName);
         queries.retrieveGameInstance(gameName)
         .then(function (game) {
             if (game.currentRound < 3) {
-              console.log('winner');
               io.to(gameName).emit('winner chosen', game);
             } else {
-              console.log('game over');
               queries.setGameInstanceGameStageToGameOver(gameName).then(function () {
                 queries.retrieveGameInstance(gameName).then(function (game) {
-                  console.log('gamemover', game);
                   io.to(gameName).emit('game over', game);
                 })
               })
@@ -304,7 +301,7 @@ io.on('connection', (socket) => {
       throw error;
     })
   })
-
+  // 
   socket.on('ready to move on', (data) => {
     console.log('rdy');
     const { username, gameName } = data;
@@ -318,7 +315,6 @@ io.on('connection', (socket) => {
         Rounds[currentRound].ready.push(username);
         queries.updateRounds(gameName, Rounds)
         .then(function() {
-          console.log('rounds', Rounds);
           if (Rounds[currentRound].ready.length === 4) {
             currentRound++;
             queries.updateCurrentRound(gameName, currentRound)
@@ -336,7 +332,6 @@ io.on('connection', (socket) => {
       throw error;
     })
   })
-
 
   // socket.on('disconnect', (data) => {
   //   if (Rooms[Sockets[socket]]) {
@@ -378,6 +373,7 @@ io.on('connection', (socket) => {
     lobbyUsers = lobbyUsers.filter(user => user !== username);
     io.to('lobby').emit('user joined lobby', lobbyUsers);
   })
+
 
   // LOBBY CHAT
   socket.on('message', (data) => {

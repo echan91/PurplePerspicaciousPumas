@@ -140,17 +140,3 @@ class CreateGame extends React.Component {
 }
 export default CreateGame;
 //replace the silly string spacing
-
-
-
-
-
-
-
-
-
-
-
-
-
-
