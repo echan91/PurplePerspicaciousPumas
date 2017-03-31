@@ -9,6 +9,7 @@ var session = require('express-session');
 var User = models.userModel;
 var Game = models.gameInstanceModel;
 var queries = require('../db/db-queries.js');
+var UserQueries = require('../db/db-usermodels-queries.js');
 var helpers = require('./helpers.js');
 
 var app = express();
@@ -73,7 +74,9 @@ app.get('/games', function(req, res) {
 });
 //add to friendlist:
 app.post('/friends', function(req, res) {
-
+   console.log(req.body);
+   UserQueries.addFriendToList(req.body.friend, req.body.username);
+   res.end();
 });
 
 app.post('/games', function(req, res) {

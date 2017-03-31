@@ -111,10 +111,9 @@ class Lobby extends React.Component {
     console.log(event);
     console.log('current user: ', this.state.username);
     if (event !== this.state.username) {
-      //add event to database friendlist
       this.addToFriendList(event, this.state.username);
     } else {
-      console.log('they are the same');
+      alert('Sorry, you can\'t add yourself.');
     }
   }
 
@@ -126,12 +125,10 @@ class Lobby extends React.Component {
       headers: {'content-type': 'application/json'},
       data: JSON.stringify({"friend": friend, "username": currentUser}),
       success: (data) => {
-        this.setState({username: username}, function() {
-          lobbyChat.emit('join lobby', {username: this.state.username});
-        });
+        console.log('friend added!');
       },
       error: (err) => {
-        console.log('error getting username', err);
+        console.log('error adding friend', err);
       }
     });
   }
