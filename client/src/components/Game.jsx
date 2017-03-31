@@ -14,7 +14,8 @@ class Game extends React.Component {
     super(props)
     this.state = {
       game: null,
-      username: null
+      username: null,
+      time: null
     };
 
     this.getGameData = this.getGameData.bind(this);
@@ -51,6 +52,11 @@ class Game extends React.Component {
       // in server/index.js
       console.log('disconnectTimeOut')
       this.props.route.sendToLobby.call(this, true);
+    })
+
+    socket.on('timer', (data) => {
+      console.log('hears it', data);
+      this.setState({time: data.time})
     })
 
   }
@@ -128,8 +134,8 @@ class Game extends React.Component {
   render() {
     return (
       <div id="game">
-        {this.state.game && this.state.username && this.state.game.gameStage === 'waiting' && <WaitingRoom game={this.state.game} user={this.state.username} sendToLobby={this.props.route.sendToLobby} leaveGame={this.leaveGame} />}
-        {this.state.game && this.state.username && this.state.game.gameStage === 'playing' && <PlayingGame game={this.state.game} user={this.state.username} handleResponse={this.handleResponse} handlePromptSubmission={this.handlePromptSubmission} handleJudgeSelection={this.handleJudgeSelection} handleReadyToMoveOn={this.handleReadyToMoveOn}/>}
+        {this.state.game && this.state.username && this.state.game.gameStage === 'waiting' && <WaitingRoom game={this.state.game} time={this.state.time} user={this.state.username} sendToLobby={this.props.route.sendToLobby} leaveGame={this.leaveGame} />}
+        {this.state.game && this.state.username && this.state.game.gameStage === 'playing' && <PlayingGame game={this.state.game} time={this.state.time} user={this.state.username} handleResponse={this.handleResponse} handlePromptSubmission={this.handlePromptSubmission} handleJudgeSelection={this.handleJudgeSelection} handleReadyToMoveOn={this.handleReadyToMoveOn}/>}
         {this.state.game && this.state.username && this.state.game.gameStage === 'gameover' && <EndOfGame game={this.state.game} sendToLobby={this.props.route.sendToLobby}/>}
       </div>
     )

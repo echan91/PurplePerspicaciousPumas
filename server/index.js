@@ -109,6 +109,7 @@ var server = app.listen(port, function() {
 
 var io = require('socket.io')(server);
 
+const Games = {};
 const Sockets = {};
 const Rooms = {};
 let userSockets = {};
@@ -154,6 +155,24 @@ io.on('connection', (socket) => {
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
     console.log(`Rooms: ${Rooms[gameName]}`);
 
+/************************
+*************************/
+    // Games[gameName] = {
+    //   time: null,
+    //   timer: null
+    // }
+    // Games[gameName].time = 15;
+    // Games[gameName].timer = setInterval( () => {
+    //   io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+    //   console.log('counting', Games[gameName].time);
+    //   if (Games[gameName].time === 0) {
+    //     console.log('it finished!');
+    //     clearInterval(Games[gameName].timer)
+    //   }
+    // }, 1000)
+    // console.log('GAMES OBJ', Games[gameName]);
+/************************
+*************************/
 
     queries.retrieveGameInstance(gameName)
     .then(game => {
@@ -170,7 +189,27 @@ io.on('connection', (socket) => {
         queries.setGameInstanceGameStageToPlaying(gameName)
           .then(game => {
             console.log('Starting game: ', game.value)
-            io.to(gameName).emit('start game', game.value)
+/*************************************************************
+LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
+**************************************************************/
+            Games[gameName] = {
+              time: null,
+              timer: null
+            }
+            Games[gameName].time = 11;
+            Games[gameName].timer = setInterval( () => {
+              io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+              console.log('counting', Games[gameName].time);
+              if (Games[gameName].time === 0) {
+                console.log('it finished!');
+                clearInterval(Games[gameName].timer)
+                io.to(gameName).emit('timer',{time: null})
+                io.to(gameName).emit('start game', game.value)
+              }
+            }, 1000)
+/*************************************************************
+**************************************************************/
+            // io.to(gameName).emit('start game', game.value)
           });
       } else {
         console.log('Joining Game: ', game.value);
