@@ -360,7 +360,25 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
             .then(function() {
               queries.retrieveGameInstance(gameName)
               .then(function(game) {
-                io.to(gameName).emit('start next round', game);
+/***************************************************************
+  LOGIC TO AUTOMATICALLY START NEXT ROUND
+***************************************************************/
+                
+                // Games[gameName].time = 10;
+                // Games[gameName].timer = setInterval( () => {
+                //   io.to(gameName).emit('timer', {time: Games[gameName].time-=1})
+                //   console.log('counting', Games[gameName].time)
+                //   if (Games[gameName].time === 0) {
+                //     console.log('next round starting');
+                //     clearInterval(Games[gameName].timer)
+                //     io.to(gameName).emit('timer', {timer: null})
+                //     io.to(gameName).emit('start next round', game)
+                //   }
+                // })
+
+/***************************************************************
+***************************************************************/
+                // io.to(gameName).emit('start next round', game);
               })
             })
           }
@@ -372,6 +390,21 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
     })
   })
 
+            // Games[gameName] = {
+            //   time: null,
+            //   timer: null
+            // }
+            // Games[gameName].time = 11;
+            // Games[gameName].timer = setInterval( () => {
+            //   io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+            //   console.log('counting', Games[gameName].time);
+            //   if (Games[gameName].time === 0) {
+            //     console.log('it finished!');
+            //     clearInterval(Games[gameName].timer)
+            //     io.to(gameName).emit('timer',{time: null})
+            //     io.to(gameName).emit('start game', game.value)
+            //   }
+            // }, 1000)
   // socket.on('disconnect', (data) => {
   //   if (Rooms[Sockets[socket]]) {
   //     Rooms[Sockets[socket]]--;
