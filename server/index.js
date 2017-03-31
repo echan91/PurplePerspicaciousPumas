@@ -71,6 +71,10 @@ app.get('/games', function(req, res) {
     res.send(sortedGames);
   })
 });
+//add to friendlist:
+app.post('/friends', function(req, res) {
+
+});
 
 app.post('/games', function(req, res) {
   var gameInstance = req.body;

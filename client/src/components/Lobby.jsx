@@ -41,7 +41,6 @@ class Lobby extends React.Component {
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
-    // this.handleUsernameClick = this.handleUsernameClick.bind(this);
 
   }
 
@@ -107,10 +106,33 @@ class Lobby extends React.Component {
 //add the clicked usename to friendlist.
 //need to get the name clicked
 //need to get the current username (friend list should have the current user)
-  handleUsernameClick(event) {
-    console.log(event);
 
-  }
+  // handleUsernameClick(event) {
+  //   console.log(event);
+  //   console.log('current user: ', this.state.username);
+  //   if (event !== this.state.username) {
+  //     //add event to database friendlist
+  //     this.addToFriendList(event, this.state.username);
+  //   }
+  // }
+
+  // addToFriendList(friend, currentUser) {
+  //   $.ajax({
+  //     //where to???
+  //     url: '/friends',
+  //     method: 'POST',
+  //     headers: {'content-type': 'application/json'},
+  //     data: JSON.stringify({"friend": friend, "username": currentUser}),
+  //     success: (data) => {
+  //       this.setState({username: username}, function() {
+  //         lobbyChat.emit('join lobby', {username: this.state.username});
+  //       });
+  //     },
+  //     error: (err) => {
+  //       console.log('error getting username', err);
+  //     }
+  //   });
+  // }
 
   render() {
     const currentGames = (
