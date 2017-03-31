@@ -30,6 +30,7 @@ var gameInstanceSchema = new Schema({
 
 var userSchema = new Schema({
 	username: {type: String, unique: true },
+	friendList: Array,
 	password: String,
 	email: String,
 });

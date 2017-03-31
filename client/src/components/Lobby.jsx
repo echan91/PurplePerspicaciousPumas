@@ -21,7 +21,7 @@ class Lobby extends React.Component {
       chatroom: [],
       lobbyUsers: [],
       value: '',
-      private: 0
+      private: 0,
     };
 
 
@@ -41,6 +41,7 @@ class Lobby extends React.Component {
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
+    // this.handleUsernameClick = this.handleUsernameClick.bind(this);
 
   }
 
@@ -103,6 +104,13 @@ class Lobby extends React.Component {
   handlePrivateState() {
     this.setState({private: 0});
   }
+//add the clicked usename to friendlist.
+//need to get the name clicked
+//need to get the current username (friend list should have the current user)
+  handleUsernameClick(event) {
+    console.log(event);
+
+  }
 
   render() {
     const currentGames = (
@@ -130,7 +138,7 @@ class Lobby extends React.Component {
         <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
         <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
         <Panel header="Users in Chat" bsStyle="primary">
-          {this.state.lobbyUsers.map(user => <p>{user}</p>)}
+          {this.state.lobbyUsers.map(user => (<div><a value={user} onClick={() => this.handleUsernameClick(user)}>{user}</a> </div>))}
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
