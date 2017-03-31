@@ -43,6 +43,16 @@ class Lobby extends React.Component {
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
 
+    this.props.route.ioSocket.on('get games', (data) => {
+      console.log(data.games);
+      this.setState({games: data.games});
+    });
+
+    this.props.route.ioSocket.on('update games', (data) => {
+      console.log(data.games);
+      this.setState({games: data.games});
+    })
+
   }
 
   componentDidMount() {

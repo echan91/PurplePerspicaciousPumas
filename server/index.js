@@ -82,9 +82,13 @@ app.post('/games', function(req, res) {
     if (err) {
       res.status(400).send(err);
     } else {
-      res.status(201).send('success creating game in db');
+      getAllGames((games) => {
+        console.log('Sending games to lobby');
+        io.to('lobby').emit('update games', {games: games})
+        res.status(201).send('success creating game in db');
+      });
     }
-  })
+  });
 })
 
 app.get('/game', function(req, res) {
@@ -116,6 +120,26 @@ const allConnectedUsers = [];
 const connectedLobbyUsers = [];
 let lobbyUsers = [];
 let lobbyChatMessages = [];
+
+var getAllGames = function(callback) {
+  var promise = Game.find({}).exec();
+
+  promise.then(function(games) {
+    var sortedGames = [];
+    var gameNameFirstWords = games.map(function(game){
+      return game.gameName.split(/\W+/, 1)[0].toLowerCase();
+    })
+    var sortedGameNameFirstWords = gameNameFirstWords.slice().sort();
+    for(var i = 0; i < sortedGameNameFirstWords.length; i++){
+      var index = gameNameFirstWords.indexOf(sortedGameNameFirstWords[i]);
+      sortedGames.push(games[index]);
+      gameNameFirstWords[index] = null;
+    }
+
+    callback(sortedGames);
+  })
+
+}
 
 
 io.on('connection', (socket) => {
@@ -150,6 +174,11 @@ io.on('connection', (socket) => {
     // Send current chat messages to any socket in the room
     io.to('lobby').emit('chat updated', lobbyChatMessages, console.log('Lobby users: ', lobbyUsers));
     io.to('lobby').emit('user joined lobby', lobbyUsers, console.log('it fired'));
+
+    getAllGames((games) => {
+      console.log('Sending games to individual socket');
+      io.to(socket.id).emit('get games', {games: games})
+    });
   });
 
   socket.on('leave lobby', data => {
@@ -240,7 +269,13 @@ io.on('connection', (socket) => {
           io.to(gameName).emit('update waiting room', game.value)
         } else {
           // If number of players is now zero then destroy that room
-          queries.destroyGameInstance(gameName);
+          queries.destroyGameInstance(gameName)
+            .then(
+              getAllGames(games => {
+                console.log('Sending games to lobby');
+                io.to('lobby').emit('update games', {games: games})
+              })
+            ).catch(err => console.log(err));
         }
         console.log(`${username} is leaving room: ${gameName}`);
         socket.leave(gameName);

@@ -28,7 +28,7 @@ const EndOfGame = ({game, sendToLobby}) => {
 			  <br />
 			  <RoundSummary round={game.rounds[0]} judge={game.players[0]}/>
 			  <br />
-        <Button onClick={sendToLobby()}>
+        <Button onClick={sendToLobby}>
           Return to Lobby
         </Button>
 	    </Col>
