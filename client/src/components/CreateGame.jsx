@@ -16,6 +16,7 @@ class CreateGame extends React.Component {
       password:"",
       confirmPassword: ""
     };
+
     this.handleGameNameChange = this.handleGameNameChange.bind(this);
     this.addGameToDB = this.addGameToDB.bind(this);
     this.handlePromptTypeSelection = this.handlePromptTypeSelection.bind(this);
@@ -39,21 +40,21 @@ class CreateGame extends React.Component {
   }
 
   handleGameNameChange(event) {
-    var filteredGameName = filter.clean(event.target.value);
+    let filteredGameName = filter.clean(event.target.value);
     this.setState({gameName: filteredGameName});
   }
 
   addGameToDB(gameName, password, promptType, callback) {
-    var initialStage = promptType === 'random' ? 0 : -1;
+    let initialStage = promptType === 'random' ? 0 : -1;
 
-    var gameInstance = {
+    let gameInstance = {
       gameName: gameName,
       password: password,
       players: [],
       rounds: [
-      {prompt: 'prompt 1', responses: [], winner: '', stage: initialStage, ready: []}, 
-      {prompt: 'prompt 2', responses: [], winner: '', stage: initialStage, ready: []}, 
-      {prompt: 'prompt 3', responses: [], winner: '', stage: initialStage, ready: []}, 
+      {prompt: 'prompt 1', responses: [], winner: '', stage: initialStage, ready: []},
+      {prompt: 'prompt 2', responses: [], winner: '', stage: initialStage, ready: []},
+      {prompt: 'prompt 3', responses: [], winner: '', stage: initialStage, ready: []},
       {prompt: 'prompt 4', responses: [], winner: '', stage: initialStage, ready: []}],
       currentRound: 0
     }
@@ -91,7 +92,7 @@ class CreateGame extends React.Component {
     if(this.props.private) {
       password = (
         <span>
-        <input placeholder="Room password" type="password" id="password" onChange={this.handlePasswordChange} required={true}/> 
+        <input placeholder="Room password" type="password" id="password" onChange={this.handlePasswordChange} required={true}/>
         <br />
         <br />
         <input placeholder="Confirm password" type="password" id="confirm_password" onChange={this.handleConfirmPassword} required={true}/>
@@ -132,7 +133,7 @@ class CreateGame extends React.Component {
           }}>Submit</Button>
         {"       "}
         <Button bsSize="small" onClick={() => this.props.handlePrivateState()}>Cancel</Button>
-      </form> 
+      </form>
       </div>
     )
   }
