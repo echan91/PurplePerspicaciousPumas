@@ -109,19 +109,19 @@ var server = app.listen(port, function() {
 
 var io = require('socket.io')(server);
 
-const Games = {};
-const Sockets = {};
-const Rooms = {};
-let userSockets = {};
-let lobbyUsers = [];
-let lobbyChatMessages = [];
+var Games = {};
+var Sockets = {};
+var Rooms = {};
+var userSockets = {};
+var lobbyUsers = [];
+var lobbyChatMessages = [];
 
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
 
   socket.on('join lobby', data => {
-    const username = data.username;
+    var username = data.username;
 
     // Add user to the userSockets object so if they disconnect we know who it was.
     userSockets[socket.id] = username;
@@ -129,7 +129,7 @@ io.on('connection', (socket) => {
     console.log(`${username} has joined the lobby!`)
     socket.join('lobby');
 
-    for (let username in userSockets) {
+    for (var username in userSockets) {
       if (!lobbyUsers.includes(userSockets[username])) {
         lobbyUsers.push(userSockets[username]);
       }
@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
 
   socket.on('join game', function(data) {
     // data needs to be gamename and username
-    const { username, gameName } = data;
+    var { username, gameName } = data;
 
     console.log(`${username} is joining room: ${gameName}`);
     socket.join(gameName);
@@ -182,7 +182,7 @@ io.on('connection', (socket) => {
       }
     })
     .then(game => {
-      const { players, gameStage } = game.value;
+      var { players, gameStage } = game.value;
       console.log('DATA!', players.length, gameStage);
 
       if (players.length === 4 && gameStage === 'waiting') {
@@ -221,12 +221,12 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
   });
 
   socket.on('leave game', (data) => {
-    const { username, gameName } = data;
+    var { username, gameName } = data;
 
     queries.retrieveGameInstance(gameName)
       .then(game => {
         if (game.players.includes(username)) {
-          let currentPlayers = game.players.filter(player => player !== username);
+          var currentPlayers = game.players.filter(player => player !== username);
 
           return queries.removePlayerFromGameInstance(gameName, username);
         } else {
@@ -343,7 +343,7 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
   // 
   socket.on('ready to move on', (data) => {
     console.log('rdy');
-    const { username, gameName } = data;
+    var { username, gameName } = data;
 
     queries.retrieveGameInstance(gameName)
     .then(game => {
@@ -440,7 +440,7 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
 
   socket.on('disconnect', data => {
     console.log('Someone disconnected!');
-    let username = userSockets[socket.id];
+    var username = userSockets[socket.id];
     delete userSockets[socket.id];
     lobbyUsers = lobbyUsers.filter(user => user !== username);
     io.to('lobby').emit('user joined lobby', lobbyUsers);
