@@ -107,32 +107,34 @@ class Lobby extends React.Component {
 //need to get the name clicked
 //need to get the current username (friend list should have the current user)
 
-  // handleUsernameClick(event) {
-  //   console.log(event);
-  //   console.log('current user: ', this.state.username);
-  //   if (event !== this.state.username) {
-  //     //add event to database friendlist
-  //     this.addToFriendList(event, this.state.username);
-  //   }
-  // }
+  handleAddFriend(event) {
+    console.log(event);
+    console.log('current user: ', this.state.username);
+    if (event !== this.state.username) {
+      //add event to database friendlist
+      this.addToFriendList(event, this.state.username);
+    } else {
+      console.log('they are the same');
+    }
+  }
 
-  // addToFriendList(friend, currentUser) {
-  //   $.ajax({
-  //     //where to???
-  //     url: '/friends',
-  //     method: 'POST',
-  //     headers: {'content-type': 'application/json'},
-  //     data: JSON.stringify({"friend": friend, "username": currentUser}),
-  //     success: (data) => {
-  //       this.setState({username: username}, function() {
-  //         lobbyChat.emit('join lobby', {username: this.state.username});
-  //       });
-  //     },
-  //     error: (err) => {
-  //       console.log('error getting username', err);
-  //     }
-  //   });
-  // }
+  addToFriendList(friend, currentUser) {
+    $.ajax({
+      //where to???
+      url: '/friends',
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      data: JSON.stringify({"friend": friend, "username": currentUser}),
+      success: (data) => {
+        this.setState({username: username}, function() {
+          lobbyChat.emit('join lobby', {username: this.state.username});
+        });
+      },
+      error: (err) => {
+        console.log('error getting username', err);
+      }
+    });
+  }
 
   render() {
     const currentGames = (
@@ -160,7 +162,7 @@ class Lobby extends React.Component {
         <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
         <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
         <Panel header="Users in Chat" bsStyle="primary">
-          {this.state.lobbyUsers.map(user => (<div><a value={user} onClick={() => this.handleUsernameClick(user)}>{user}</a> </div>))}
+          {this.state.lobbyUsers.map(user => (<div><span>{user}</span> <Button value={user} onClick={() => this.handleAddFriend(user)} >Add friend</Button></div>))}
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
