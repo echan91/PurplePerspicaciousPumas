@@ -119,7 +119,7 @@ class Lobby extends React.Component {
     const currentGames = (
       <div>
         <h4>Current Games:</h4>
-        {this.state.games && <GameList games={this.state.games} sendToGame={this.props.route.sendToGame} />}
+        {this.state.games && <GameList username={this.state.username} games={this.state.games} sendToGame={this.props.route.sendToGame} />}
       </div>
     );
 

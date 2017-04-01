@@ -116,8 +116,8 @@ var io = require('socket.io')(server);
 const Sockets = {};
 const Rooms = {};
 let userSockets = {};
-const allConnectedUsers = [];
-const connectedLobbyUsers = [];
+const allConnectedUsers = {};
+const connectedLobbyUsers = {};
 let lobbyUsers = [];
 let lobbyChatMessages = [];
 
@@ -160,16 +160,14 @@ io.on('connection', (socket) => {
     const username = data.username;
 
     // Overwrite if same user connected from a new socket
-
-    allConnectedUsers.push({id: socket.id, username});
-    connectedLobbyUsers.push({id: socket.id, username});
+    allConnectedUsers[username] = connectedLobbyUsers[username] = socket.id;
 
     console.log('All users', allConnectedUsers);
     console.log('Users in lobby', connectedLobbyUsers);
 
     socket.join('lobby', console.log(`${username} has joined the lobby!`));
 
-    lobbyUsers = connectedLobbyUsers.map(user => user.username);
+    lobbyUsers = Object.keys(connectedLobbyUsers);
 
     // Send current chat messages to any socket in the room
     io.to('lobby').emit('chat updated', lobbyChatMessages, console.log('Lobby users: ', lobbyUsers));
@@ -182,19 +180,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('leave lobby', data => {
-    console.log('Someone left the lobby', data.id);
-    console.log(typeof data.id);
+    console.log('Someone left the lobby', data.username);
     socket.leave('lobby');
 
-    // let username = userSockets[data.id];
-    let targetUser = connectedLobbyUsers.filter(user => user.id === data.id)[0];
-    console.log('target', targetUser);
-    console.log('username that left is ', targetUser.username)
     console.log('Lobby before', lobbyUsers);
-    lobbyUsers = lobbyUsers.filter(user => user !== targetUser.username);
-
-    // Filter array of connected lobby users
-    connectedLobbyUsers.filter(user => user.id !== data.id);
+    delete connectedLobbyUsers[data.username];
+    lobbyUsers = Object.keys(connectedLobbyUsers)
 
     io.to('lobby').emit('user joined lobby', lobbyUsers);
     console.log('Lobby after someone left is', lobbyUsers);

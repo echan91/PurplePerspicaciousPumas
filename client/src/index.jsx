@@ -24,8 +24,8 @@ class App extends Component {
     hashHistory.push('/lobby');
   }
 
-  sendToGame(gameName) {
-    ioSocket.emit('leave lobby', {id: ioSocket.id});
+  sendToGame(gameName, username) {
+    ioSocket.emit('leave lobby', {id: ioSocket.id, username: username});
     hashHistory.push(/game/ + gameName);
   }
 
