@@ -2,7 +2,6 @@
 import React from 'react';
 import GameList from './GameList.jsx';
 import $ from 'jquery';
-// import io from 'socket.io-client';
 import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
@@ -10,11 +9,14 @@ import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormCont
 
 
 // TODO: build logic to prevent users from joining a full game
-// const lobbyChat = io();
+
 
 class Lobby extends React.Component {
   constructor(props) {
     super(props)
+
+    console.log(this.props);
+
     this.state = {
       games: null,
       username: null,
@@ -25,22 +27,32 @@ class Lobby extends React.Component {
     };
 
 
-    // lobbyChat.on('chat updated', messages => {
-    //   this.setState({chatroom: messages});
-    //   console.log('Current client side chat: ', this.state.chatroom);
-    // });
+    this.props.route.ioSocket.on('chat updated', messages => {
+      this.setState({chatroom: messages});
+      console.log('Current client side chat: ', this.state.chatroom);
+    });
 
-    // lobbyChat.on('user joined lobby', userList => {
-    //   console.log(userList);
-    //   this.setState({lobbyUsers: userList});
-    //   console.log('Current lobby users: ', this.state.lobbyUsers);
-    // });
+    this.props.route.ioSocket.on('user joined lobby', userList => {
+      console.log(userList);
+      this.setState({lobbyUsers: userList});
+      console.log('Current lobby users: ', this.state.lobbyUsers);
+    });
 
     this.getGames = this.getGames.bind(this);
     this.sendMessageToChatroom = this.sendMessageToChatroom.bind(this);
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
+
+    this.props.route.ioSocket.on('get games', (data) => {
+      console.log(data.games);
+      this.setState({games: data.games});
+    });
+
+    this.props.route.ioSocket.on('update games', (data) => {
+      console.log(data.games);
+      this.setState({games: data.games});
+    })
 
   }
 
@@ -73,7 +85,7 @@ class Lobby extends React.Component {
       headers: {'content-type': 'application/json'},
       success: (username) => {
         this.setState({username: username}, function() {
-          lobbyChat.emit('join lobby', {username: this.state.username});
+          this.props.route.ioSocket.emit('join lobby', {username: this.state.username});
         });
       },
       error: (err) => {
@@ -88,7 +100,7 @@ class Lobby extends React.Component {
   }
 
   sendMessageToChatroom(message) {
-    lobbyChat.send({message: message, username: this.state.username});
+    this.props.route.ioSocket.send({message: message, username: this.state.username});
     this.setState({value: ''});
   }
 
@@ -108,23 +120,25 @@ class Lobby extends React.Component {
     const currentGames = (
       <div>
         <h4>Current Games:</h4>
-        {this.state.games && <GameList games={this.state.games} sendToGame={this.props.route.sendToGame} />}
+        {this.state.games && <GameList username={this.state.username} games={this.state.games} sendToGame={this.props.route.sendToGame} />}
       </div>
     );
 
     let mainPanel = currentGames;
     if (this.state.private === 1) {
-      mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/>;
+      mainPanel = <CreateGame username={this.state.username} sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/>;
     } else if (this.state.private === -1) {
-      mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
+      mainPanel = <CreateGame username={this.state.username} sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
     }
 
 
     return (
       <Col id="lobby" sm={6} smOffset={3}>
         <PageHeader>Lobby</PageHeader>
-        <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
+        <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button>
+        {   }
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>
+
         {mainPanel}
 
         <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
@@ -135,9 +149,7 @@ class Lobby extends React.Component {
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
         </Panel>
-
       </Col>
-
     )
   }
 }

@@ -6,10 +6,11 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-var User = models.userModel;
-var Game = models.gameInstanceModel;
 var queries = require('../db/db-queries.js');
 var helpers = require('./helpers.js');
+
+var User = models.userModel;
+var Game = models.gameInstanceModel;
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -81,9 +82,13 @@ app.post('/games', function(req, res) {
     if (err) {
       res.status(400).send(err);
     } else {
-      res.status(201).send('success creating game in db');
+      getAllGames((games) => {
+        console.log('Sending games to lobby');
+        io.to('lobby').emit('update games', {games: games})
+        res.status(201).send('success creating game in db');
+      });
     }
-  })
+  });
 })
 
 app.get('/game', function(req, res) {
@@ -105,44 +110,98 @@ var server = app.listen(port, function() {
   console.log('App is listening on port: ', port);
 });
 
-//SOCKETS 
-
+//SOCKETS
 var io = require('socket.io')(server);
 
-var Games = {};
-var Sockets = {};
-var Rooms = {};
-var userSockets = {};
-var lobbyUsers = [];
-var lobbyChatMessages = [];
+
+const Games = {};
+const Sockets = {};
+const Rooms = {};
+let userSockets = {};
+const allConnectedUsers = {};
+const connectedLobbyUsers = {};
+let lobbyUsers = [];
+let lobbyChatMessages = [];
+
+var getAllGames = function(callback) {
+  var promise = Game.find({}).exec();
+
+  promise.then(function(games) {
+    var sortedGames = [];
+    var gameNameFirstWords = games.map(function(game){
+      return game.gameName.split(/\W+/, 1)[0].toLowerCase();
+    })
+    var sortedGameNameFirstWords = gameNameFirstWords.slice().sort();
+    for(var i = 0; i < sortedGameNameFirstWords.length; i++){
+      var index = gameNameFirstWords.indexOf(sortedGameNameFirstWords[i]);
+      sortedGames.push(games[index]);
+      gameNameFirstWords[index] = null;
+    }
+
+    callback(sortedGames);
+  })
+
+}
 
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
-  console.log(socket.id);
 
+  // DISCONNECT
+  socket.on('disconnect', data => {
+    console.log('Someone disconnected!');
+    let username = userSockets[socket.id];
+    delete userSockets[socket.id];
+    lobbyUsers = lobbyUsers.filter(user => user !== username);
+    io.to('lobby').emit('user joined lobby', lobbyUsers);
+  })
+
+  // LOBBY
   socket.on('join lobby', data => {
     var username = data.username;
 
-    // Add user to the userSockets object so if they disconnect we know who it was.
-    userSockets[socket.id] = username;
-    console.log('Sockets', userSockets);
-    console.log(`${username} has joined the lobby!`)
-    socket.join('lobby');
+    // Overwrite if same user connected from a new socket
+    allConnectedUsers[username] = connectedLobbyUsers[username] = socket.id;
+    console.log('All users', allConnectedUsers);
+    console.log('Users in lobby', connectedLobbyUsers);
 
-    for (var username in userSockets) {
-      if (!lobbyUsers.includes(userSockets[username])) {
-        lobbyUsers.push(userSockets[username]);
-      }
-    }
+    socket.join('lobby', console.log(`${username} has joined the lobby!`));
 
-    // Send current chat messages to new user that joined
-    io.to('lobby').emit('chat updated', lobbyChatMessages);
-    console.log('Lobby users: ', lobbyUsers);
-    io.to('lobby').emit('user joined lobby', lobbyUsers);
-    console.log('it fired');
+    lobbyUsers = Object.keys(connectedLobbyUsers);
+
+    // Send current chat messages to any socket in the room
+    io.to('lobby').emit('chat updated', lobbyChatMessages, console.log('Lobby users: ', lobbyUsers));
+    io.to('lobby').emit('user joined lobby', lobbyUsers, console.log('it fired'));
+
+    getAllGames((games) => {
+      console.log('Sending games to individual socket');
+      io.to(socket.id).emit('get games', {games: games})
+    });
   });
 
+  socket.on('leave lobby', data => {
+    console.log('Someone left the lobby', data.username);
+    socket.leave('lobby');
+
+    console.log('Lobby before', lobbyUsers);
+    delete connectedLobbyUsers[data.username];
+    lobbyUsers = Object.keys(connectedLobbyUsers)
+
+
+    io.to('lobby').emit('user joined lobby', lobbyUsers);
+    console.log('Lobby after someone left is', lobbyUsers);
+  });
+
+  socket.on('message', (data) => {
+    console.log('Message received: ', data);
+    lobbyChatMessages.push(data);
+    console.log('Current chat: ', lobbyChatMessages);
+    io.to('lobby').emit('chat updated', lobbyChatMessages);
+  });
+
+  // CHATS
+
+  // GAMES
   socket.on('join game', function(data) {
     // data needs to be gamename and username
     var { username, gameName } = data;
@@ -171,6 +230,10 @@ io.on('connection', (socket) => {
         queries.setGameInstanceGameStageToPlaying(gameName)
           .then(game => {
             console.log('Starting game: ', game.value)
+            getAllGames((games) => {
+              console.log('Sending games to individual socket join game start');
+              io.to('lobby').emit('update games', {games: games})
+            });
             var dummyGameRoom = Object.assign({},game.value,{gameStage:'waiting'});
             io.to(gameName).emit('update waiting room', dummyGameRoom);
 /*************************************************************
@@ -195,11 +258,15 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
 THIS WORKS FINE!
 **************************************************************/
             // io.to(gameName).emit('start game', game.value)
+
           });
       } else {
         console.log('Joining Game: ', game.value);
         io.to(gameName).emit('update waiting room', game.value);
-
+        getAllGames((games) => {
+          console.log('Sending games to individual socket');
+          io.to('lobby').emit('update games', {games: games})
+        });
       }
     })
     .catch(error => console.log(error))
@@ -222,9 +289,19 @@ THIS WORKS FINE!
       .then(game => {
         if (game.value.players.length > 0) {
           io.to(gameName).emit('update waiting room', game.value)
+          getAllGames((games) => {
+            console.log('Sending games to individual socket');
+            io.to(socket.id).emit('get games', {games: games})
+          });
         } else {
           // If number of players is now zero then destroy that room
-          queries.destroyGameInstance(gameName);
+          queries.destroyGameInstance(gameName)
+            .then(
+              getAllGames(games => {
+                console.log('Sending games to lobby');
+                io.to('lobby').emit('update games', {games: games})
+              })
+            ).catch(err => console.log(err));
         }
         console.log(`${username} is leaving room: ${gameName}`);
         socket.leave(gameName);
@@ -253,7 +330,6 @@ THIS WORKS FINE!
       })
     })
   })
-
 
   socket.on('submit response', (data) => {
     var gameName = data.gameName;
@@ -293,8 +369,6 @@ THIS WORKS FINE!
     })
   })
 
-
-  // on 'judge selection' 
   socket.on('judge selection', (data) => {
     var gameName = data.gameName;
     var winner = data.winner;
@@ -452,22 +526,4 @@ bookmark -- it kind of works
   //   console.log('a user disconnected', data);
   // });
 
-  socket.on('disconnect', data => {
-    console.log('Someone disconnected!');
-    var username = userSockets[socket.id];
-    delete userSockets[socket.id];
-    lobbyUsers = lobbyUsers.filter(user => user !== username);
-    io.to('lobby').emit('user joined lobby', lobbyUsers);
-  })
-
-
-  // LOBBY CHAT
-  socket.on('message', (data) => {
-    console.log('Message received: ', data);
-    lobbyChatMessages.push(data);
-    console.log('Current chat: ', lobbyChatMessages);
-    io.to('lobby').emit('chat updated', lobbyChatMessages);
-  });
-
 });
-
