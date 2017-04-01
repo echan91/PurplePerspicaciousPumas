@@ -6,7 +6,8 @@ import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
 import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
-
+var Filter = require('bad-words');
+var filter = new Filter();
 
 // TODO: build logic to prevent users from joining a full game
 
@@ -48,6 +49,7 @@ class Lobby extends React.Component {
     this.showFriendNameInput = this.showFriendNameInput.bind(this);
     this.handleAddFriendByInputName = this.handleAddFriendByInputName.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleLogout = this.handleLogout.bind(this);
 
     this.props.route.ioSocket.on('get games', (data) => {
       console.log(data.games);
@@ -57,7 +59,7 @@ class Lobby extends React.Component {
     this.props.route.ioSocket.on('update games', (data) => {
       console.log(data.games);
       this.setState({games: data.games});
-    })
+    });
 
   }
 
@@ -104,7 +106,7 @@ class Lobby extends React.Component {
   }
 
   sendMessageToChatroom(message) {
-    this.props.route.ioSocket.send({message: message, username: this.state.username});
+    this.props.route.ioSocket.send({message: filter.clean(message), username: this.state.username});
     this.setState({value: ''});
   }
 
@@ -151,15 +153,33 @@ class Lobby extends React.Component {
     //toggle a flag here to showup the form
     this.setState( prevState => ({addFriend: !prevState.addFriend}));
   }
-  //herer!!!
+
   handleAddFriendByInputName(event) {
     event.preventDefault();
     this.addToFriendList(this.state.friendName, this.state.username, true);
-
   }
 
   handleInputChange(event) {
     this.setState({friendName: event.target.value});
+  }
+
+  handleLogout() {
+    console.log(this.state.username);
+    let logoutFunc = this.props.route.sendToHomePage;
+    this.props.route.ioSocket.emit('leave lobby', this.state);
+
+    $.ajax({
+      url: '/logout',
+      method: 'GET',
+      headers: {'content-type': 'application/json'},
+      success: data => {
+        console.log('handleLogout data: ', data);
+        logoutFunc();
+      },
+      error: (err) => {
+        console.log('error logging out: ', err);
+      }
+    });
   }
 
   render() {
@@ -194,7 +214,7 @@ class Lobby extends React.Component {
 
     return (
       <Col id="lobby" sm={6} smOffset={3}>
-        <PageHeader>Lobby for {this.state.username}</PageHeader>
+        <PageHeader>Lobby for {this.state.username} {  }<Button onClick={this.handleLogout}>Logout</Button></PageHeader>
         <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
 
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>

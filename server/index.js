@@ -47,6 +47,7 @@ app.post('/signup', function (req, res) {
 
 app.post('/login', passport.authenticate('local'), function(req, res) {
   console.log('in login request');
+  console.log('request session:', req.session);
   res.status(201).send('success')
 })
 
@@ -56,7 +57,7 @@ app.get('/test', passport.authenticate('local'), function(req, res) {
 
 app.get('/games', function(req, res) {
   var promise = Game.find({}).exec();
-
+  console.log('games session: ', req.session);
   promise.then(function(games) {
     var sortedGames = [];
     var gameNameFirstWords = games.map(function(game){
@@ -111,7 +112,13 @@ app.post('/friends', function(req, res) {
       res.status(400).send('Uh oh, there\'s an error adding friend');
     });
    }
-   // UserQueries.addFriendToList(req.body.friend, req.body.username);
+});
+
+app.get('/logout', function(req, res) {
+  console.log('logging out');
+  req.logout();
+  console.log('new session object: ', req.session);
+  res.status(200).send('successfully logged out');
 });
 
 app.post('/games', function(req, res) {
