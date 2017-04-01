@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var mongodbURL = process.env.MONGODB_URI || 'mongodb://localhost/orange-to-orange';
+var mongodbURL = process.env.MONGODB_URI || 'mongodb://legacy:legacy@ds111940.mlab.com:11940/gg-legacy-dev';
 
 mongoose.connect(mongodbURL);
 var Schema = mongoose.Schema;
@@ -30,6 +30,7 @@ var gameInstanceSchema = new Schema({
 
 var userSchema = new Schema({
 	username: {type: String, unique: true },
+	friendList: Array,
 	password: String,
 	email: String,
 });
@@ -38,10 +39,14 @@ userSchema.plugin(passportLocalMongoose);
 
 var gameInstanceModel = mongoose.model('gameInstanceModel', gameInstanceSchema);
 
+var userInstanceModel = mongoose.model('userModel', userSchema);
+
 //COMMENT THIS OUT DURING GAME TESTING
 //Clearout database
-var collection = db.collection('gameinstancemodels');
-collection.remove({});
+var gameCollection = db.collection('gameinstancemodels');
+gameCollection.remove({});
+
+
 
 var gameOne = new gameInstanceModel(dummyGames.gameOne)
 
@@ -164,7 +169,6 @@ for (let game in dummyGamePlayThrough) {
 // }
 
 
-
 module.exports.gameInstanceModel = gameInstanceModel;
-module.exports.userModel = mongoose.model('userModel', userSchema);
+module.exports.userModel = userInstanceModel;
 module.exports.db = db;

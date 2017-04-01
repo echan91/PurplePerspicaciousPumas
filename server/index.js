@@ -6,10 +6,12 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
+var queries = require('../db/db-queries.js');
+var UserQueries = require('../db/db-usermodels-queries.js');
+var helpers = require('./helpers.js');
+
 var User = models.userModel;
 var Game = models.gameInstanceModel;
-var queries = require('../db/db-queries.js');
-var helpers = require('./helpers.js');
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -31,7 +33,8 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.post('/signup', function (req, res) {
-  User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function (err, user) {
+  //add friendlist here:
+  User.register(new User({username: req.body.username, email: req.body.email, friendList: req.body.friendList}), req.body.password, function (err, user) {
     if (err) {
       console.log(err);
       return res.status(400).send(err);
@@ -70,6 +73,47 @@ app.get('/games', function(req, res) {
     res.send(sortedGames);
   })
 });
+//add to friendlist:
+app.post('/friends', function(req, res) {
+   console.log(req.body);
+   //if user typed in the friend name
+     //check if the name typed in exist in the database
+     //if yes, check if it's the user itself
+       //if not self, add to friendlist
+     //if no, send back an error code to front-end
+   if (req.body.typedIn) {
+    UserQueries.selectUserByName(req.body.friend)
+    .then((data) => {
+      console.log('this is the selected data: ', data);
+      if (!data) {
+        //
+        res.status(400).send('This person doesn\'t exist!');
+      } else {
+        //
+        UserQueries.addFriendToList(req.body.friend, req.body.username)
+        .then(() => {
+          res.status(201).send('successfully added friend');
+        })
+        .catch((err) => {
+          res.status(400).send('Uh oh, there\'s an error adding friend');
+        });
+      }
+    })
+    .catch(err => {
+      res.status(400).send('Uh oh, an error occured!');
+    });
+   } else {
+    
+    UserQueries.addFriendToList(req.body.friend, req.body.username)
+    .then(() => {
+      res.status(201).send('successfully added friend');
+    })
+    .catch((err) => {
+      res.status(400).send('Uh oh, there\'s an error adding friend');
+    });
+   }
+   // UserQueries.addFriendToList(req.body.friend, req.body.username);
+});
 
 app.post('/games', function(req, res) {
   var gameInstance = req.body;
@@ -81,9 +125,13 @@ app.post('/games', function(req, res) {
     if (err) {
       res.status(400).send(err);
     } else {
-      res.status(201).send('success creating game in db');
+      getAllGames((games) => {
+        console.log('Sending games to lobby');
+        io.to('lobby').emit('update games', {games: games})
+        res.status(201).send('success creating game in db');
+      });
     }
-  })
+  });
 })
 
 app.get('/game', function(req, res) {
@@ -105,45 +153,101 @@ var server = app.listen(port, function() {
   console.log('App is listening on port: ', port);
 });
 
-//SOCKETS 
-
+//SOCKETS
 var io = require('socket.io')(server);
 
+
+const Games = {};
 const Sockets = {};
 const Rooms = {};
 let userSockets = {};
+const allConnectedUsers = {};
+const connectedLobbyUsers = {};
 let lobbyUsers = [];
 let lobbyChatMessages = [];
+
+var getAllGames = function(callback) {
+  var promise = Game.find({}).exec();
+
+  promise.then(function(games) {
+    var sortedGames = [];
+    var gameNameFirstWords = games.map(function(game){
+      return game.gameName.split(/\W+/, 1)[0].toLowerCase();
+    })
+    var sortedGameNameFirstWords = gameNameFirstWords.slice().sort();
+    for(var i = 0; i < sortedGameNameFirstWords.length; i++){
+      var index = gameNameFirstWords.indexOf(sortedGameNameFirstWords[i]);
+      sortedGames.push(games[index]);
+      gameNameFirstWords[index] = null;
+    }
+
+    callback(sortedGames);
+  })
+
+}
 
 
 io.on('connection', (socket) => {
   console.log(`A user connected to the socket`);
 
-  socket.on('join lobby', data => {
-    const username = data.username;
-
-    // Add user to the userSockets object so if they disconnect we know who it was.
-    userSockets[socket.id] = username;
-    console.log('Sockets', userSockets);
-    console.log(`${username} has joined the lobby!`)
-    socket.join('lobby');
-
-    for (let username in userSockets) {
-      if (!lobbyUsers.includes(userSockets[username])) {
-        lobbyUsers.push(userSockets[username]);
-      }
-    }
-
-    // Send current chat messages to new user that joined
-    io.to('lobby').emit('chat updated', lobbyChatMessages);
-    console.log('Lobby users: ', lobbyUsers);
+  // DISCONNECT
+  socket.on('disconnect', data => {
+    console.log('Someone disconnected!');
+    let username = userSockets[socket.id];
+    delete userSockets[socket.id];
+    lobbyUsers = lobbyUsers.filter(user => user !== username);
     io.to('lobby').emit('user joined lobby', lobbyUsers);
-    console.log('it fired');
+  })
+
+  // LOBBY
+  socket.on('join lobby', data => {
+    var username = data.username;
+
+    // Overwrite if same user connected from a new socket
+    allConnectedUsers[username] = connectedLobbyUsers[username] = socket.id;
+    console.log('All users', allConnectedUsers);
+    console.log('Users in lobby', connectedLobbyUsers);
+
+    socket.join('lobby', console.log(`${username} has joined the lobby!`));
+
+    lobbyUsers = Object.keys(connectedLobbyUsers);
+
+    // Send current chat messages to any socket in the room
+    io.to('lobby').emit('chat updated', lobbyChatMessages, console.log('Lobby users: ', lobbyUsers));
+    io.to('lobby').emit('user joined lobby', lobbyUsers, console.log('it fired'));
+
+    getAllGames((games) => {
+      console.log('Sending games to individual socket');
+      io.to(socket.id).emit('get games', {games: games})
+    });
   });
 
+  socket.on('leave lobby', data => {
+    console.log('Someone left the lobby', data.username);
+    socket.leave('lobby');
+
+    console.log('Lobby before', lobbyUsers);
+    delete connectedLobbyUsers[data.username];
+    lobbyUsers = Object.keys(connectedLobbyUsers)
+
+
+    io.to('lobby').emit('user joined lobby', lobbyUsers);
+    console.log('Lobby after someone left is', lobbyUsers);
+  });
+
+  socket.on('message', (data) => {
+    console.log('Message received: ', data);
+    lobbyChatMessages.push(data);
+    console.log('Current chat: ', lobbyChatMessages);
+    io.to('lobby').emit('chat updated', lobbyChatMessages);
+  });
+
+  // CHATS
+
+  // GAMES
   socket.on('join game', function(data) {
     // data needs to be gamename and username
-    const { username, gameName } = data;
+    var { username, gameName } = data;
 
     console.log(`${username} is joining room: ${gameName}`);
     socket.join(gameName);
@@ -154,7 +258,6 @@ io.on('connection', (socket) => {
     Rooms[gameName] ? Rooms[gameName]++ : Rooms[gameName] = 1;
     console.log(`Rooms: ${Rooms[gameName]}`);
 
-
     queries.retrieveGameInstance(gameName)
     .then(game => {
       // add client to game DB if they're not already in players list
@@ -163,31 +266,62 @@ io.on('connection', (socket) => {
       }
     })
     .then(game => {
-      const { players, gameStage } = game.value;
+      var { players, gameStage } = game.value;
       console.log('DATA!', players.length, gameStage);
 
       if (players.length === 4 && gameStage === 'waiting') {
         queries.setGameInstanceGameStageToPlaying(gameName)
           .then(game => {
             console.log('Starting game: ', game.value)
-            io.to(gameName).emit('start game', game.value)
+            getAllGames((games) => {
+              console.log('Sending games to individual socket join game start');
+              io.to('lobby').emit('update games', {games: games})
+            });
+            var dummyGameRoom = Object.assign({},game.value,{gameStage:'waiting'});
+            io.to(gameName).emit('update waiting room', dummyGameRoom);
+/*************************************************************
+LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
+**************************************************************/
+            Games[gameName] = {
+              time: null,
+              timer: null
+            }
+            Games[gameName].time = 5;
+            Games[gameName].timer = setInterval( () => {
+              io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+              console.log('counting', Games[gameName].time);
+              if (Games[gameName].time <= 0) {
+                console.log('Game Starting!');
+                clearInterval(Games[gameName].timer)
+                io.to(gameName).emit('timer',{time: null})
+                io.to(gameName).emit('start game', game.value)
+              }
+            }, 1000)
+/*************************************************************
+THIS WORKS FINE!
+**************************************************************/
+            // io.to(gameName).emit('start game', game.value)
+
           });
       } else {
         console.log('Joining Game: ', game.value);
         io.to(gameName).emit('update waiting room', game.value);
-
+        getAllGames((games) => {
+          console.log('Sending games to individual socket');
+          io.to('lobby').emit('update games', {games: games})
+        });
       }
     })
     .catch(error => console.log(error))
   });
 
   socket.on('leave game', (data) => {
-    const { username, gameName } = data;
+    var { username, gameName } = data;
 
     queries.retrieveGameInstance(gameName)
       .then(game => {
         if (game.players.includes(username)) {
-          let currentPlayers = game.players.filter(player => player !== username);
+          var currentPlayers = game.players.filter(player => player !== username);
 
           return queries.removePlayerFromGameInstance(gameName, username);
         } else {
@@ -198,9 +332,19 @@ io.on('connection', (socket) => {
       .then(game => {
         if (game.value.players.length > 0) {
           io.to(gameName).emit('update waiting room', game.value)
+          getAllGames((games) => {
+            console.log('Sending games to individual socket');
+            io.to(socket.id).emit('get games', {games: games})
+          });
         } else {
           // If number of players is now zero then destroy that room
-          queries.destroyGameInstance(gameName);
+          queries.destroyGameInstance(gameName)
+            .then(
+              getAllGames(games => {
+                console.log('Sending games to lobby');
+                io.to('lobby').emit('update games', {games: games})
+              })
+            ).catch(err => console.log(err));
         }
         console.log(`${username} is leaving room: ${gameName}`);
         socket.leave(gameName);
@@ -229,7 +373,6 @@ io.on('connection', (socket) => {
       })
     })
   })
-
 
   socket.on('submit response', (data) => {
     var gameName = data.gameName;
@@ -269,8 +412,6 @@ io.on('connection', (socket) => {
     })
   })
 
-
-  // on 'judge selection' 
   socket.on('judge selection', (data) => {
     var gameName = data.gameName;
     var winner = data.winner;
@@ -287,8 +428,54 @@ io.on('connection', (socket) => {
         .then(function (game) {
             if (game.currentRound < 3) {
               io.to(gameName).emit('winner chosen', game);
+/*****************************************
+bookmark -- it kind of works
+******************************************/
+              clearInterval(Games[gameName].timer)
+              Games[gameName] = {
+                time: null,
+                timer: null
+              }
+              Games[gameName].time = 10;
+              Games[gameName].timer = setInterval( () => {
+                console.log('starting countdown to next round');
+                io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+                // if (Games[gameName].time < -1) {
+                //   console.log('trying to stop timer!');
+                //   clearInterval(Games[gameName].timer)
+                // }
+                if (Games[gameName].time === 0) {
+                  clearInterval(Games[gameName].timer)
+                  io.to(gameName).emit('timer',{time: null})
+/*****************************************
+******************************************/
+                  queries.retrieveGameInstance(gameName)
+                  .then(game => {
+                    console.log('Ready to move on game data: ', game);
+                    var currentRound = game.currentRound;
+                    var Rounds = game.rounds.slice(0);
+                      queries.updateRounds(gameName, Rounds)
+                      .then(function() {
+                        currentRound++;
+                        queries.updateCurrentRound(gameName, currentRound)
+                        .then(function() {
+                          queries.retrieveGameInstance(gameName)
+                          .then(function(game) {
+                            io.to(gameName).emit('start next round', game);
+                          })
+                        })
+                      })
+                  }).catch(function(error) {
+                    console.log(error);
+                    throw error;
+                  })
+                }
+              }, 1000)
+/******************************************
+******************************************/
             } else {
               queries.setGameInstanceGameStageToGameOver(gameName).then(function () {
+                clearInterval(Games[gameName].timer)
                 queries.retrieveGameInstance(gameName).then(function (game) {
                   io.to(gameName).emit('game over', game);
                 })
@@ -301,38 +488,54 @@ io.on('connection', (socket) => {
       throw error;
     })
   })
-  // 
-  socket.on('ready to move on', (data) => {
-    console.log('rdy');
-    const { username, gameName } = data;
+  
+  // socket.on('ready to move on', (data) => {
+  //   console.log('rdy', data);
+  //   var { username, gameName } = data;
 
-    queries.retrieveGameInstance(gameName)
-    .then(game => {
-      console.log('Ready to move on game data: ', game);
-      var currentRound = game.currentRound;
-      var Rounds = game.rounds.slice(0);
-      if (!Rounds[currentRound].ready.includes(username)) {
-        Rounds[currentRound].ready.push(username);
-        queries.updateRounds(gameName, Rounds)
-        .then(function() {
-          if (Rounds[currentRound].ready.length === 4) {
-            currentRound++;
-            queries.updateCurrentRound(gameName, currentRound)
-            .then(function() {
-              queries.retrieveGameInstance(gameName)
-              .then(function(game) {
-                io.to(gameName).emit('start next round', game);
-              })
-            })
-          }
-        })
-      }
-    }).catch(function(error) {
-      console.log(error);
-      throw error;
-    })
-  })
+  //   queries.retrieveGameInstance(gameName)
+  //   .then(game => {
+  //     console.log('Ready to move on game data: ', game);
+  //     var currentRound = game.currentRound;
+  //     var Rounds = game.rounds.slice(0);
+  //     if (!Rounds[currentRound].ready.includes(username)) {
+  //       Rounds[currentRound].ready.push(username);
+  //       queries.updateRounds(gameName, Rounds)
+  //       .then(function() {
+  //         if (Rounds[currentRound].ready.length === 4) {
+  //           currentRound++;
+  //           queries.updateCurrentRound(gameName, currentRound)
+  //           .then(function() {
+  //             queries.retrieveGameInstance(gameName)
+  //             .then(function(game) {
+  //               console.log('starting next round', game);
+  //               io.to(gameName).emit('start next round', game);
+  //             })
+  //           })
+  //         }
+  //       })
+  //     }
+  //   }).catch(function(error) {
+  //     console.log(error);
+  //     throw error;
+  //   })
+  // })
 
+            // Games[gameName] = {
+            //   time: null,
+            //   timer: null
+            // }
+            // Games[gameName].time = 11;
+            // Games[gameName].timer = setInterval( () => {
+            //   io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+            //   console.log('counting', Games[gameName].time);
+            //   if (Games[gameName].time === 0) {
+            //     console.log('it finished!');
+            //     clearInterval(Games[gameName].timer)
+            //     io.to(gameName).emit('timer',{time: null})
+            //     io.to(gameName).emit('start game', game.value)
+            //   }
+            // }, 1000)
   // socket.on('disconnect', (data) => {
   //   if (Rooms[Sockets[socket]]) {
   //     Rooms[Sockets[socket]]--;
@@ -366,22 +569,4 @@ io.on('connection', (socket) => {
   //   console.log('a user disconnected', data);
   // });
 
-  socket.on('disconnect', data => {
-    console.log('Someone disconnected!');
-    let username = userSockets[socket.id];
-    delete userSockets[socket.id];
-    lobbyUsers = lobbyUsers.filter(user => user !== username);
-    io.to('lobby').emit('user joined lobby', lobbyUsers);
-  })
-
-
-  // LOBBY CHAT
-  socket.on('message', (data) => {
-    console.log('Message received: ', data);
-    lobbyChatMessages.push(data);
-    console.log('Current chat: ', lobbyChatMessages);
-    io.to('lobby').emit('chat updated', lobbyChatMessages);
-  });
-
 });
-

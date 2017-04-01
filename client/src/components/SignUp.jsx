@@ -12,7 +12,9 @@ class SignUp extends React.Component {
       email: '',
       username: '',
       password: '',
-      error: false
+      error: false,
+      //new:
+      friendList: ""
     }
     this.handleEmailChange = this.handleEmailChange.bind(this);
     this.handleUsernameChange = this.handleUsernameChange.bind(this);
@@ -41,7 +43,8 @@ class SignUp extends React.Component {
       url: '/signup',
       method: 'POST',
       headers: {'content-type': 'application/json'},
-      data: JSON.stringify({'username': username, 'email': email, 'password': password}),
+      //added friendList:
+      data: JSON.stringify({'username': username, 'email': email, 'password': password, 'friendList': []}),
       success: (data) => {
         this.props.sendToLobby();
       },

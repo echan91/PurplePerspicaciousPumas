@@ -67,6 +67,7 @@ class PlayingGame extends React.Component{
             <h4>Scoreboard</h4>
             <Score game={this.props.game}/>
           </Col>
+          <h3> {this.props.time} </h3>
           <Col sm={6} smOffset={3}>
             {stage !== -1 && <Prompt prompt={curPrompt}/>}
           </Col>

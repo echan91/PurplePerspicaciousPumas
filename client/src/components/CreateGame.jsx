@@ -46,18 +46,20 @@ class CreateGame extends React.Component {
 
   addGameToDB(gameName, password, promptType, callback) {
     let initialStage = promptType === 'random' ? 0 : -1;
-
+    let context = this;
     let gameInstance = {
       gameName: gameName,
       password: password,
       players: [],
       rounds: [
-      {prompt: 'prompt 1', responses: [], winner: '', stage: initialStage, ready: []},
-      {prompt: 'prompt 2', responses: [], winner: '', stage: initialStage, ready: []},
-      {prompt: 'prompt 3', responses: [], winner: '', stage: initialStage, ready: []},
-      {prompt: 'prompt 4', responses: [], winner: '', stage: initialStage, ready: []}],
+        {prompt: 'prompt 1', responses: [], winner: '', stage: initialStage, ready: []},
+        {prompt: 'prompt 2', responses: [], winner: '', stage: initialStage, ready: []},
+        {prompt: 'prompt 3', responses: [], winner: '', stage: initialStage, ready: []},
+        {prompt: 'prompt 4', responses: [], winner: '', stage: initialStage, ready: []}
+      ],
       currentRound: 0
     }
+    console.log('we are before the post call');
 
     $.ajax({
       url: '/games',
@@ -65,7 +67,8 @@ class CreateGame extends React.Component {
       headers: {'content-type': 'application/json'},
       data: JSON.stringify(gameInstance),
       success: (data) => {
-        callback(gameName);
+        console.log('testing addGameToDB', data);
+        callback(gameName, context.props.username);
       },
       error: (err) => {
         console.log('error in login POST: ', err);
