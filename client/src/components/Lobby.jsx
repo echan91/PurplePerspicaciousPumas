@@ -22,7 +22,8 @@ class Lobby extends React.Component {
       lobbyUsers: [],
       value: '',
       private: 0,
-      addFriend: false
+      addFriend: false,
+      friendName: ''
     };
 
     lobbyChat.on('chat updated', messages => {
@@ -41,7 +42,9 @@ class Lobby extends React.Component {
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
+    this.showFriendNameInput = this.showFriendNameInput.bind(this);
     this.handleAddFriendByName = this.handleAddFriendByName.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
 
   }
 
@@ -85,7 +88,6 @@ class Lobby extends React.Component {
 
   handleMessageChange(event) {
     this.setState({value: event.target.value});
-    console.log(this.state.value);
   }
 
   sendMessageToChatroom(message) {
@@ -105,9 +107,7 @@ class Lobby extends React.Component {
     this.setState({private: 0});
   }
 
-  handleAddFriend(event) {
-    console.log(event);
-    console.log('current user: ', this.state.username);
+  handleAddFriendByClick(event) {
     if (event !== this.state.username) {
       this.addToFriendList(event, this.state.username);
     } else {
@@ -115,7 +115,7 @@ class Lobby extends React.Component {
     }
   }
 
-  addToFriendList(friend, currentUser) {
+  addToFriendList(friend, currentUser, fromInput) {
     $.ajax({
       url: '/friends',
       method: 'POST',
@@ -130,11 +130,21 @@ class Lobby extends React.Component {
     });
   }
 
-  handleAddFriendByName() {
+  showFriendNameInput() {
     //toggle a flag here to showup the form
-    console.log('here!');
     this.setState( prevState => ({addFriend: !prevState.addFriend}));
-    console.log('there!');
+  }
+  //herer!!!
+  handleAddFriendByName(event) {
+    event.preventDefault();
+    this.addToFriendList(this.state.friendName, this.state.username, true);
+    console.log(this.state.friendName);
+
+  }
+
+  handleInputChange(event) {
+    this.setState({friendName: event.target.value});
+    console.log(this.state.friendName);
   }
 
   render() {
@@ -155,14 +165,14 @@ class Lobby extends React.Component {
     let header = (<span>
       <span>Users in Chat</span>
       {"    "}
-      <Button bsSize="xsmall" bsStyle="info" onClick={this.handleAddFriendByName}>Add a friend by name
+      <Button bsSize="xsmall" bsStyle="info" onClick={this.showFriendNameInput}>Add a friend by name
       </Button>
     </span>);
 
     let addFriend = (
       <Form inline>
-        <FormControl type="text" placeholder="Edward" />
-      <Button type="submit">Add</Button>
+        <FormControl type="text" placeholder="Edward" onChange={this.handleInputChange} />
+      <Button type="submit" onClick={this.handleAddFriendByName}>Add</Button>
       </Form>
     );
 
@@ -178,7 +188,7 @@ class Lobby extends React.Component {
         <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
         {"             "}
         <Panel header={header} bsStyle="primary">
-          {this.state.lobbyUsers.map(user => (<div><span>{user}</span> <Button value={user} onClick={() => this.handleAddFriend(user)} >Add friend</Button></div>))}
+          {this.state.lobbyUsers.map(user => (<div><span>{user}</span> <Button value={user} onClick={() => this.handleAddFriendByClick(user)} >Add friend</Button></div>))}
           {this.state.addFriend ? addFriend : null}
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
