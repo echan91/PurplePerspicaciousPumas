@@ -43,7 +43,7 @@ class Lobby extends React.Component {
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
     this.showFriendNameInput = this.showFriendNameInput.bind(this);
-    this.handleAddFriendByName = this.handleAddFriendByName.bind(this);
+    this.handleAddFriendByInputName = this.handleAddFriendByInputName.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
 
   }
@@ -109,18 +109,18 @@ class Lobby extends React.Component {
 
   handleAddFriendByClick(event) {
     if (event !== this.state.username) {
-      this.addToFriendList(event, this.state.username);
+      this.addToFriendList(event, this.state.username, false);
     } else {
       alert('Sorry, you can\'t add yourself.');
     }
   }
 
-  addToFriendList(friend, currentUser, fromInput) {
+  addToFriendList(friend, currentUser, typedIn) {
     $.ajax({
       url: '/friends',
       method: 'POST',
       headers: {'content-type': 'application/json'},
-      data: JSON.stringify({"friend": friend, "username": currentUser}),
+      data: JSON.stringify({"friend": friend, "username": currentUser, "typedIn": typedIn}),
       success: (data) => {
         console.log('friend added!');
       },
@@ -135,7 +135,7 @@ class Lobby extends React.Component {
     this.setState( prevState => ({addFriend: !prevState.addFriend}));
   }
   //herer!!!
-  handleAddFriendByName(event) {
+  handleAddFriendByInputName(event) {
     event.preventDefault();
     this.addToFriendList(this.state.friendName, this.state.username, true);
     console.log(this.state.friendName);
@@ -172,14 +172,14 @@ class Lobby extends React.Component {
     let addFriend = (
       <Form inline>
         <FormControl type="text" placeholder="Edward" onChange={this.handleInputChange} />
-      <Button type="submit" onClick={this.handleAddFriendByName}>Add</Button>
+      <Button type="submit" onClick={this.handleAddFriendByInputName}>Add</Button>
       </Form>
     );
 
 
     return (
       <Col id="lobby" sm={6} smOffset={3}>
-        <PageHeader>Lobby</PageHeader>
+        <PageHeader>Lobby for {this.state.username}</PageHeader>
         <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>
         {mainPanel}
