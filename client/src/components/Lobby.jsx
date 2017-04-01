@@ -122,10 +122,14 @@ class Lobby extends React.Component {
       headers: {'content-type': 'application/json'},
       data: JSON.stringify({"friend": friend, "username": currentUser, "typedIn": typedIn}),
       success: (data) => {
-        console.log('friend added!');
+        alert('Friend added!');
       },
       error: (err) => {
-        console.log('error adding friend', err);
+        if (err.responseText) {
+          alert(err.responseText);
+        } else {
+          console.log('error adding friend', err);
+        }
       }
     });
   }
