@@ -240,11 +240,18 @@ io.on('connection', (socket) => {
           .then(game => {
             console.log('Starting game: ', game.value)
             io.to(gameName).emit('start game', game.value)
+            getAllGames((games) => {
+              console.log('Sending games to individual socket join game start');
+              io.to('lobby').emit('update games', {games: games})
+            });
           });
       } else {
         console.log('Joining Game: ', game.value);
         io.to(gameName).emit('update waiting room', game.value);
-
+        getAllGames((games) => {
+          console.log('Sending games to individual socket');
+          io.to('lobby').emit('update games', {games: games})
+        });
       }
     })
     .catch(error => console.log(error))
@@ -267,6 +274,10 @@ io.on('connection', (socket) => {
       .then(game => {
         if (game.value.players.length > 0) {
           io.to(gameName).emit('update waiting room', game.value)
+          getAllGames((games) => {
+            console.log('Sending games to individual socket');
+            io.to(socket.id).emit('get games', {games: games})
+          });
         } else {
           // If number of players is now zero then destroy that room
           queries.destroyGameInstance(gameName)
