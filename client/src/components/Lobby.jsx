@@ -23,8 +23,11 @@ class Lobby extends React.Component {
       chatroom: [],
       lobbyUsers: [],
       value: '',
-      private: 0
+      private: 0,
+      addFriend: false,
+      friendName: ''
     };
+
 
     this.props.route.ioSocket.on('chat updated', messages => {
       this.setState({chatroom: messages});
@@ -42,6 +45,9 @@ class Lobby extends React.Component {
     this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleGameCreationChoice = this.handleGameCreationChoice.bind(this);
     this.handlePrivateState = this.handlePrivateState.bind(this);
+    this.showFriendNameInput = this.showFriendNameInput.bind(this);
+    this.handleAddFriendByInputName = this.handleAddFriendByInputName.bind(this);
+    this.handleInputChange = this.handleInputChange.bind(this);
 
     this.props.route.ioSocket.on('get games', (data) => {
       console.log(data.games);
@@ -95,7 +101,6 @@ class Lobby extends React.Component {
 
   handleMessageChange(event) {
     this.setState({value: event.target.value});
-    console.log(this.state.value);
   }
 
   sendMessageToChatroom(message) {
@@ -115,6 +120,48 @@ class Lobby extends React.Component {
     this.setState({private: 0});
   }
 
+  handleAddFriendByClick(event) {
+    if (event !== this.state.username) {
+      this.addToFriendList(event, this.state.username, false);
+    } else {
+      alert('Sorry, you can\'t add yourself.');
+    }
+  }
+
+  addToFriendList(friend, currentUser, typedIn) {
+    $.ajax({
+      url: '/friends',
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      data: JSON.stringify({"friend": friend, "username": currentUser, "typedIn": typedIn}),
+      success: (data) => {
+        alert('Friend added!');
+      },
+      error: (err) => {
+        if (err.responseText) {
+          alert(err.responseText);
+        } else {
+          console.log('error adding friend', err);
+        }
+      }
+    });
+  }
+
+  showFriendNameInput() {
+    //toggle a flag here to showup the form
+    this.setState( prevState => ({addFriend: !prevState.addFriend}));
+  }
+  //herer!!!
+  handleAddFriendByInputName(event) {
+    event.preventDefault();
+    this.addToFriendList(this.state.friendName, this.state.username, true);
+
+  }
+
+  handleInputChange(event) {
+    this.setState({friendName: event.target.value});
+  }
+
   render() {
     const currentGames = (
       <div>
@@ -130,20 +177,36 @@ class Lobby extends React.Component {
       mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
     }
 
+    let header = (<span>
+      <span>Users in Chat</span>
+      {"    "}
+      <Button bsSize="xsmall" bsStyle="info" onClick={this.showFriendNameInput}>Add a friend by name
+      </Button>
+    </span>);
+
+    let addFriend = (
+      <Form inline>
+        <FormControl type="text" placeholder="Edward" onChange={this.handleInputChange} />
+      <Button type="submit" onClick={this.handleAddFriendByInputName}>Add</Button>
+      </Form>
+    );
+
 
     return (
       <Col id="lobby" sm={6} smOffset={3}>
-        <PageHeader>Lobby</PageHeader>
-        <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button>
-        {   }
+        <PageHeader>Lobby for {this.state.username}</PageHeader>
+        <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
+
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>
 
         {mainPanel}
 
         <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
         <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
-        <Panel header="Users in Chat" bsStyle="primary">
-          {this.state.lobbyUsers.map(user => <p>{user}</p>)}
+        {"             "}
+        <Panel header={header} bsStyle="primary">
+          {this.state.lobbyUsers.map(user => (<div><span>{user}</span> <Button value={user} onClick={() => this.handleAddFriendByClick(user)} >Add friend</Button></div>))}
+          {this.state.addFriend ? addFriend : null}
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
