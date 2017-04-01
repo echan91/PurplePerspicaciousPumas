@@ -9,6 +9,5 @@ module.exports.addFriendToList = function(friend, currentUser) {
 			console.log(friend);
 			users.update({username: currentUser}, {$push: {"friendList": friend}});
 		}
-
 	});
 };

@@ -133,7 +133,7 @@ class Lobby extends React.Component {
   handleAddFriendByName() {
     //toggle a flag here to showup the form
     console.log('here!');
-    this.setState((prevState) => ({addFriend: !prevState.addFriend}));
+    this.setState( prevState => ({addFriend: !prevState.addFriend}));
     console.log('there!');
   }
 
@@ -153,17 +153,18 @@ class Lobby extends React.Component {
     }
 
     let header = (<span>
-      <span>Lobby Chat</span>
+      <span>Users in Chat</span>
       {"    "}
       <Button bsSize="xsmall" bsStyle="info" onClick={this.handleAddFriendByName}>Add a friend by name
       </Button>
-    </span>)
-    let addFriend = (<Form>
-      <FormControl>
-      </FormControl>
-      
+    </span>);
 
-      </Form>);
+    let addFriend = (
+      <Form inline>
+        <FormControl type="text" placeholder="Edward" />
+      <Button type="submit">Add</Button>
+      </Form>
+    );
 
 
     return (
@@ -178,10 +179,10 @@ class Lobby extends React.Component {
         {"             "}
         <Panel header={header} bsStyle="primary">
           {this.state.lobbyUsers.map(user => (<div><span>{user}</span> <Button value={user} onClick={() => this.handleAddFriend(user)} >Add friend</Button></div>))}
+          {this.state.addFriend ? addFriend : null}
         </Panel>
         <Panel header="Lobby Chat" bsStyle="primary">
           {this.state.chatroom.map(message => <p>{message.username}: {message.message}</p>)}
-          {addFriend}
         </Panel>
 
       </Col>
