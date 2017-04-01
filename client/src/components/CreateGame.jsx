@@ -59,7 +59,6 @@ class CreateGame extends React.Component {
       ],
       currentRound: 0
     }
-    console.log('we are before the post call');
 
     $.ajax({
       url: '/games',
@@ -67,7 +66,6 @@ class CreateGame extends React.Component {
       headers: {'content-type': 'application/json'},
       data: JSON.stringify(gameInstance),
       success: (data) => {
-        console.log('testing addGameToDB', data);
         callback(gameName, context.props.username);
       },
       error: (err) => {

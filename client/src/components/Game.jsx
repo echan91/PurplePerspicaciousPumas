@@ -30,34 +30,36 @@ class Game extends React.Component {
     })
     this.props.route.ioSocket.on('start game', (gameObj) => {
       this.setState({game: gameObj});
+      console.log('round starts!')
+      this.props.route.ioSocket.emit('round started', {
+        gameName: this.state.game.gameName,
+        username: this.state.username
+      })
     })
     this.props.route.ioSocket.on('prompt added', (gameObj) => {
       this.setState({game: gameObj});
     })
     this.props.route.ioSocket.on('start judging', (gameObj) => {
       this.setState({game: gameObj});
+      this.props.route.ioSocket.emit('judging timer', {
+        gameName: this.state.game.gameName
+      })
     })
+
     this.props.route.ioSocket.on('winner chosen', (gameObj) => {
       this.setState({game: gameObj});
     })
     this.props.route.ioSocket.on('start next round', (gameObj) => {
       this.setState({game: gameObj});
+      this.props.route.ioSocket.emit('round started', {
+        gameName: this.state.game.gameName,
+        username: this.state.username
+      })
     })
-
-    // socket.on('starting next round', (data) => {
-    //   // this.handleReadyToMoveOn();
-    //   this.handleReadyToMoveOn()
-    // })
 
     this.props.route.ioSocket.on('game over', (gameObj) => {
       this.setState({game: gameObj});
     })
-    // socket.on('disconnectTimeOut', () => {
-    //   // this function is related to the commented out function
-    //   // in server/index.js
-    //   console.log('disconnectTimeOut')
-    //   this.props.route.sendToLobby.call(this, true);
-    // })
 
     this.props.route.ioSocket.on('timer', (data) => {
       this.setState({time: data.time})

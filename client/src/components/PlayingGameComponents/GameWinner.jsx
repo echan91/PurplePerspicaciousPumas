@@ -8,7 +8,9 @@ const GameWinner = (props) => {
   let roundWinners = {};
 
   rounds.forEach(function(round) {
-    roundWinners[round.winner] ? roundWinners[round.winner]++ : roundWinners[round.winner] = 1;
+    if(round.winner.length >= 1) {
+      roundWinners[round.winner] ? roundWinners[round.winner]++ : roundWinners[round.winner] = 1;
+    }
   });
 
 
