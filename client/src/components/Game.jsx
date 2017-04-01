@@ -7,8 +7,6 @@ import $ from 'jquery';
 import io from 'socket.io-client';
 import { PageHeader } from 'react-bootstrap';
 
-const socket = io();
-
 class Game extends React.Component {
   constructor(props) {
     super(props)
@@ -26,23 +24,23 @@ class Game extends React.Component {
     this.handleJudgeSelection = this.handleJudgeSelection.bind(this);
     this.handleReadyToMoveOn = this.handleReadyToMoveOn.bind(this);
 
-    socket.on('update waiting room', (gameObj) => {
+    this.props.route.ioSocket.on('update waiting room', (gameObj) => {
       //{gameStage: 'waiting'}
       this.setState({game: gameObj});
     })
-    socket.on('start game', (gameObj) => {
+    this.props.route.ioSocket.on('start game', (gameObj) => {
       this.setState({game: gameObj});
     })
-    socket.on('prompt added', (gameObj) => {
+    this.props.route.ioSocket.on('prompt added', (gameObj) => {
       this.setState({game: gameObj});
     })
-    socket.on('start judging', (gameObj) => {
+    this.props.route.ioSocket.on('start judging', (gameObj) => {
       this.setState({game: gameObj});
     })
-    socket.on('winner chosen', (gameObj) => {
+    this.props.route.ioSocket.on('winner chosen', (gameObj) => {
       this.setState({game: gameObj});
     })
-    socket.on('start next round', (gameObj) => {
+    this.props.route.ioSocket.on('start next round', (gameObj) => {
       this.setState({game: gameObj});
     })
 
@@ -51,7 +49,7 @@ class Game extends React.Component {
     //   this.handleReadyToMoveOn()
     // })
 
-    socket.on('game over', (gameObj) => {
+    this.props.route.ioSocket.on('game over', (gameObj) => {
       this.setState({game: gameObj});
     })
     // socket.on('disconnectTimeOut', () => {
@@ -61,7 +59,7 @@ class Game extends React.Component {
     //   this.props.route.sendToLobby.call(this, true);
     // })
 
-    socket.on('timer', (data) => {
+    this.props.route.ioSocket.on('timer', (data) => {
       this.setState({time: data.time})
     })
 
@@ -98,7 +96,7 @@ class Game extends React.Component {
       headers: {'content-type': 'application/json'},
       success: (username) => {
         this.setState({username: username}, function() {
-          socket.emit('join game', {gameName: this.props.params.gamename, username: this.state.username});
+          this.props.route.ioSocket.emit('join game', {gameName: this.props.params.gamename, username: this.state.username});
         });
       },
       error: (err) => {
@@ -114,28 +112,28 @@ class Game extends React.Component {
       let exitGameChoice = confirm('You are the only player. Are you sure you want to destroy this game?');
 
       if (exitGameChoice) {
-        socket.emit('leave game', {gameName: this.props.params.gamename, username: this.state.username});
+        this.props.route.ioSocket.emit('leave game', {gameName: this.props.params.gamename, username: this.state.username});
       }
     } else {
-      socket.emit('leave game', {gameName: this.props.params.gamename, username: this.state.username});
+      this.props.route.ioSocket.emit('leave game', {gameName: this.props.params.gamename, username: this.state.username});
     }
   }
 
   handleResponse(response) {
-    socket.emit('submit response', {gameName: this.props.params.gamename, username: this.state.username, response: response});
+    this.props.route.ioSocket.emit('submit response', {gameName: this.props.params.gamename, username: this.state.username, response: response});
   }
 
   handleJudgeSelection(winner) {
-    socket.emit('judge selection', {gameName: this.props.params.gamename, winner: winner});
+    this.props.route.ioSocket.emit('judge selection', {gameName: this.props.params.gamename, winner: winner});
   }
 
   handleReadyToMoveOn() {
     console.log('move on triggered')
-    socket.emit('ready to move on', {gameName: this.props.params.gamename, username: this.state.username});
+    this.props.route.ioSocket.emit('ready to move on', {gameName: this.props.params.gamename, username: this.state.username});
   }
 
   handlePromptSubmission(prompt) {
-    socket.emit('prompt created', {gameName: this.props.params.gamename, prompt: prompt});
+    this.props.route.ioSocket.emit('prompt created', {gameName: this.props.params.gamename, prompt: prompt});
   }
 
   render() {

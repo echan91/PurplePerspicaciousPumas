@@ -103,7 +103,7 @@ app.post('/friends', function(req, res) {
       res.status(400).send('Uh oh, an error occured!');
     });
    } else {
-    
+
     UserQueries.addFriendToList(req.body.friend, req.body.username)
     .then(() => {
       res.status(201).send('successfully added friend');
@@ -375,6 +375,7 @@ THIS WORKS FINE!
   })
 
   socket.on('submit response', (data) => {
+    console.log('Received response', data);
     var gameName = data.gameName;
     var username = data.username;
     var response = data.response;
@@ -488,7 +489,7 @@ bookmark -- it kind of works
       throw error;
     })
   })
-  
+
   // socket.on('ready to move on', (data) => {
   //   console.log('rdy', data);
   //   var { username, gameName } = data;
