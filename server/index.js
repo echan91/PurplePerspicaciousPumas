@@ -420,9 +420,99 @@ ROUND STARTING TIMER
     })
   })
 
+  socket.on('judging timer', data => {
+    var {gameName} = data;
+    var winner = 'No Winner Chosen!'
+    clearInterval(Games[gameName].timer);
+    Games[gameName] = {
+      time: 10,
+      timer: null
+    }
+    Games[gameName].timer = setInterval( () => {
+      io.to(gameName).emit('timer', {time: Games[gameName].time--})
+      if (Games[gameName].time < 0) {
+        clearInterval(Games[gameName].timer)
+        queries.retrieveGameInstance(gameName)
+        .then(function (game) {
+          var currentRound = game.currentRound;
+          var currentResponses = game.rounds[currentRound].responses;
+          var Rounds = game.rounds.slice(0);
+          Rounds[currentRound].winner = winner;
+          Rounds[currentRound].stage++;
+          queries.updateRounds(gameName, Rounds)
+        
+/*****************************************************************************************
+COPYING JUDGE SELECTION CODE HERE
+*****************************************************************************************/
+          .then(function () {
+            queries.retrieveGameInstance(gameName)
+            .then(function (game) {
+                if (game.currentRound < 3) {
+                  io.to(gameName).emit('winner chosen', game);
+    /**************************************************************************************************
+    LOGIC FOR WINNERS DISPLAY PAGE
+    **************************************************************************************************/
+                  clearInterval(Games[gameName].timer)
+                  Games[gameName] = {
+                    time: 10,
+                    timer: null
+                  }
+                  Games[gameName].timer = setInterval( () => {
+                    io.to(gameName).emit('timer',{time: Games[gameName].time--})
+                    if (Games[gameName].time < 0) {
+                      clearInterval(Games[gameName].timer)
+                      queries.retrieveGameInstance(gameName)
+                      .then(game => {
+                        console.log('Ready to move on game data: ', game);
+                        var currentRound = game.currentRound;
+                        var Rounds = game.rounds.slice(0);
+                          queries.updateRounds(gameName, Rounds)
+                          .then(function() {
+                            currentRound++;
+                            queries.updateCurrentRound(gameName, currentRound)
+                            .then(function() {
+                              queries.retrieveGameInstance(gameName)
+                              .then(function(game) {
+                                io.to(gameName).emit('timer',{time: null})
+                                io.to(gameName).emit('start next round', game);
+                              })
+                            })
+                          })
+                      }).catch(function(error) {
+                        console.log(error);
+                        throw error;
+                      })
+                    }
+                  }, 1000)
+    /**************************************************************************************************
+    LOGIC FOR WINNERS DISPLAY PAGE - WORKS!
+    **************************************************************************************************/
+                } else {
+                  queries.setGameInstanceGameStageToGameOver(gameName).then(function () {
+                    clearInterval(Games[gameName].timer)
+                    queries.retrieveGameInstance(gameName).then(function (game) {
+                      io.to(gameName).emit('game over', game);
+                    })
+                  })
+                }
+              })
+            })
+        }).catch(function(error) {
+          console.log(error);
+          throw error;
+        })
+
+/*****************************************************************************************
+*****************************************************************************************/      
+      }
+    }, 1000)
+  })
+
   socket.on('judge selection', (data) => {
     var gameName = data.gameName;
     var winner = data.winner;
+    io.to(gameName).emit('timer', {time: null})
+    clearInterval(Games[gameName].timer)
     queries.retrieveGameInstance(gameName)
     .then(function (game) {
       var currentRound = game.currentRound;
@@ -445,7 +535,6 @@ LOGIC FOR WINNERS DISPLAY PAGE
                 timer: null
               }
               Games[gameName].timer = setInterval( () => {
-                console.log('starting countdown to next round');
                 io.to(gameName).emit('timer',{time: Games[gameName].time--})
                 if (Games[gameName].time < 0) {
                   clearInterval(Games[gameName].timer)

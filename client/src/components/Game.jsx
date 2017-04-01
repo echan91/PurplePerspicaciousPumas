@@ -43,6 +43,9 @@ class Game extends React.Component {
     })
     socket.on('start judging', (gameObj) => {
       this.setState({game: gameObj});
+      socket.emit('judging timer', {
+        gameName: this.state.game.gameName
+      })
     })
     socket.on('winner chosen', (gameObj) => {
       this.setState({game: gameObj});
