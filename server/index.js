@@ -422,7 +422,7 @@ ROUND STARTING TIMER
 
   socket.on('judging timer', data => {
     var {gameName} = data;
-    var winner = 'No Winner Chosen!'
+    var winner = ''
     clearInterval(Games[gameName].timer);
     Games[gameName] = {
       time: 10,
