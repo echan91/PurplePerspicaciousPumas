@@ -184,7 +184,7 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
             Games[gameName].timer = setInterval( () => {
               io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
               console.log('counting', Games[gameName].time);
-              if (Games[gameName].time === 0) {
+              if (Games[gameName].time <= 0) {
                 console.log('Game Starting!');
                 clearInterval(Games[gameName].timer)
                 io.to(gameName).emit('timer',{time: null})
@@ -192,6 +192,7 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
               }
             }, 1000)
 /*************************************************************
+THIS WORKS FINE!
 **************************************************************/
             // io.to(gameName).emit('start game', game.value)
           });
@@ -310,16 +311,22 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
         .then(function (game) {
             if (game.currentRound < 3) {
               io.to(gameName).emit('winner chosen', game);
+/*****************************************
+bookmark -- it kind of works
+******************************************/
+              clearInterval(Games[gameName].timer)
               Games[gameName] = {
                 time: null,
                 timer: null
               }
-              console.log('checking Games[gameName]', Games[gameName])
-              Games[gameName].time = 5;
-              clearInterval(Games[gameName].timer)
+              Games[gameName].time = 10;
               Games[gameName].timer = setInterval( () => {
                 console.log('starting countdown to next round');
                 io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
+                // if (Games[gameName].time < -1) {
+                //   console.log('trying to stop timer!');
+                //   clearInterval(Games[gameName].timer)
+                // }
                 if (Games[gameName].time === 0) {
                   clearInterval(Games[gameName].timer)
                   io.to(gameName).emit('timer',{time: null})
@@ -347,7 +354,7 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
                   })
                 }
               }, 1000)
-/*****************************************
+/******************************************
 ******************************************/
             } else {
               queries.setGameInstanceGameStageToGameOver(gameName).then(function () {

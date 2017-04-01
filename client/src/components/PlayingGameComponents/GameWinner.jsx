@@ -31,7 +31,7 @@ const GameWinner = (props) => {
   } else {
     winnerMessage += 'the winners: ',
     gameWinner.forEach(function(winner, index) {
-      index === gameWinner.length - 1 ? winnerMessage += winner + ', ' : winnerMessage += winner;
+      index === gameWinner.length - 1 ? (winnerMessage += winner) : winnerMessage += winner + ', ';
     })
   }
 
