@@ -246,19 +246,19 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
             }
             Games[gameName].time = 5;
             Games[gameName].timer = setInterval( () => {
-              io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
-              console.log('counting', Games[gameName].time);
-              if (Games[gameName].time <= 0) {
+              io.to(gameName).emit('timer',{time: Games[gameName].time--})
+              if (Games[gameName].time < 0) {
                 console.log('Game Starting!');
                 clearInterval(Games[gameName].timer)
-                io.to(gameName).emit('timer',{time: null})
-                io.to(gameName).emit('start game', game.value)
+                setTimeout( () => {
+                  io.to(gameName).emit('timer',{time: null})
+                  io.to(gameName).emit('start game', game.value)
+                }, 1500)
               }
             }, 1000)
 /*************************************************************
 THIS WORKS FINE!
 **************************************************************/
-            // io.to(gameName).emit('start game', game.value)
 
           });
       } else {
@@ -272,6 +272,55 @@ THIS WORKS FINE!
     })
     .catch(error => console.log(error))
   });
+
+/****************************************************************************************************************************
+
+ROUND STARTING TIMER
+
+****************************************************************************************************************************/
+  socket.on('round started', (data) => {
+    var { gameName, username } = data;
+    console.log('round starts!', data);
+    clearInterval(Games[gameName].timer);
+    console.log(Games[gameName])
+    Games[gameName] = {
+      time: 15,
+      timer: null
+    }
+    Games[gameName].timer = setInterval( () => {
+      // io.to(gameName).emit('timer', {time: Games[gameName].time--})
+      io.to(gameName).emit('timer', {time: Games[gameName].time--})
+      console.log(Games[gameName].time);
+      if (Games[gameName].time < 0){
+        io.to(gameName).emit('timer', {time: null})
+        clearInterval(Games[gameName].timer)
+        queries.retrieveGameInstance(gameName)
+        .then(function(game) {
+          var currentRound = game.currentRound;
+          var currentResponses = game.rounds[currentRound].responses;
+          var currentRounds = game.rounds;
+          currentRounds[currentRound].stage++;
+          return queries.updateRounds(gameName, currentRounds)
+          .then(function() {
+            return queries.retrieveGameInstance(gameName)
+            .then(function(game) {
+              io.to(gameName).emit('start judging', game);
+              console.log('game');
+            })
+          })
+        }).catch(function(error) {
+          console.log(error);
+          throw error;
+        })
+      }
+    }, 1000)
+  })
+
+/****************************************************************************************************************************
+
+ROUND STARTING TIMER
+
+****************************************************************************************************************************/
 
   socket.on('leave game', (data) => {
     var { username, gameName } = data;
@@ -347,6 +396,7 @@ THIS WORKS FINE!
         currentRounds[currentRound].responses.push([response, username]);
 
         if (currentRounds[currentRound].responses.length === 3) {
+          clearInterval(Games[gameName].timer);
           currentRounds[currentRound].stage++;
         }
         //update rounds property of the game in DB w/ new responses and stage
@@ -386,27 +436,19 @@ THIS WORKS FINE!
         .then(function (game) {
             if (game.currentRound < 3) {
               io.to(gameName).emit('winner chosen', game);
-/*****************************************
-bookmark -- it kind of works
-******************************************/
+/**************************************************************************************************
+LOGIC FOR WINNERS DISPLAY PAGE
+**************************************************************************************************/
               clearInterval(Games[gameName].timer)
               Games[gameName] = {
-                time: null,
+                time: 10,
                 timer: null
               }
-              Games[gameName].time = 10;
               Games[gameName].timer = setInterval( () => {
                 console.log('starting countdown to next round');
-                io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
-                // if (Games[gameName].time < -1) {
-                //   console.log('trying to stop timer!');
-                //   clearInterval(Games[gameName].timer)
-                // }
-                if (Games[gameName].time === 0) {
+                io.to(gameName).emit('timer',{time: Games[gameName].time--})
+                if (Games[gameName].time < 0) {
                   clearInterval(Games[gameName].timer)
-                  io.to(gameName).emit('timer',{time: null})
-/*****************************************
-******************************************/
                   queries.retrieveGameInstance(gameName)
                   .then(game => {
                     console.log('Ready to move on game data: ', game);
@@ -419,6 +461,7 @@ bookmark -- it kind of works
                         .then(function() {
                           queries.retrieveGameInstance(gameName)
                           .then(function(game) {
+                            io.to(gameName).emit('timer',{time: null})
                             io.to(gameName).emit('start next round', game);
                           })
                         })
@@ -429,8 +472,9 @@ bookmark -- it kind of works
                   })
                 }
               }, 1000)
-/******************************************
-******************************************/
+/**************************************************************************************************
+LOGIC FOR WINNERS DISPLAY PAGE - WORKS!
+**************************************************************************************************/
             } else {
               queries.setGameInstanceGameStageToGameOver(gameName).then(function () {
                 clearInterval(Games[gameName].timer)
@@ -446,85 +490,5 @@ bookmark -- it kind of works
       throw error;
     })
   })
-  
-  // socket.on('ready to move on', (data) => {
-  //   console.log('rdy', data);
-  //   var { username, gameName } = data;
-
-  //   queries.retrieveGameInstance(gameName)
-  //   .then(game => {
-  //     console.log('Ready to move on game data: ', game);
-  //     var currentRound = game.currentRound;
-  //     var Rounds = game.rounds.slice(0);
-  //     if (!Rounds[currentRound].ready.includes(username)) {
-  //       Rounds[currentRound].ready.push(username);
-  //       queries.updateRounds(gameName, Rounds)
-  //       .then(function() {
-  //         if (Rounds[currentRound].ready.length === 4) {
-  //           currentRound++;
-  //           queries.updateCurrentRound(gameName, currentRound)
-  //           .then(function() {
-  //             queries.retrieveGameInstance(gameName)
-  //             .then(function(game) {
-  //               console.log('starting next round', game);
-  //               io.to(gameName).emit('start next round', game);
-  //             })
-  //           })
-  //         }
-  //       })
-  //     }
-  //   }).catch(function(error) {
-  //     console.log(error);
-  //     throw error;
-  //   })
-  // })
-
-            // Games[gameName] = {
-            //   time: null,
-            //   timer: null
-            // }
-            // Games[gameName].time = 11;
-            // Games[gameName].timer = setInterval( () => {
-            //   io.to(gameName).emit('timer',{time: Games[gameName].time-=1})
-            //   console.log('counting', Games[gameName].time);
-            //   if (Games[gameName].time === 0) {
-            //     console.log('it finished!');
-            //     clearInterval(Games[gameName].timer)
-            //     io.to(gameName).emit('timer',{time: null})
-            //     io.to(gameName).emit('start game', game.value)
-            //   }
-            // }, 1000)
-  // socket.on('disconnect', (data) => {
-  //   if (Rooms[Sockets[socket]]) {
-  //     Rooms[Sockets[socket]]--;
-  //     var timer = 60;
-  //     var disconnectTimeOut = function() {
-  //       setTimeout(function(){
-  //         if (timer === 0 && Rooms[Sockets[socket]] < 4) {
-  //           console.log('disconnectTimeOut')
-  //           queries.setGameInstanceGameStageToGameOver(Sockets[socket])
-  //           .then(function(){
-  //             console.log(Sockets[socket]);
-  //               io.to(Sockets[socket]).emit('disconnectTimeOut');
-  //           })
-  //         } else {
-  //           if (Rooms[Sockets[socket]] < 4) {
-  //             console.log(timer, Rooms[Sockets[socket]]);
-  //             timer = timer - 1;
-  //             disconnectTimeOut();
-  //           }
-  //         }
-  //       }, 1000);
-  //     }
-  //     queries.retrieveGameInstance(Sockets[socket])
-  //     .then(function(game) {
-  //       if (game.gameStage === 'playing') {
-  //         disconnectTimeOut();
-  //       }
-  //     });
-  //   }
-
-  //   console.log('a user disconnected', data);
-  // });
 
 });

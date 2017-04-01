@@ -32,6 +32,11 @@ class Game extends React.Component {
     })
     socket.on('start game', (gameObj) => {
       this.setState({game: gameObj});
+      console.log('round starts!')
+      socket.emit('round started', {
+        gameName: this.state.game.gameName,
+        username: this.state.username
+      })
     })
     socket.on('prompt added', (gameObj) => {
       this.setState({game: gameObj});
@@ -44,22 +49,15 @@ class Game extends React.Component {
     })
     socket.on('start next round', (gameObj) => {
       this.setState({game: gameObj});
+      socket.emit('round started', {
+        gameName: this.state.game.gameName,
+        username: this.state.username
+      })
     })
-
-    // socket.on('starting next round', (data) => {
-    //   // this.handleReadyToMoveOn();
-    //   this.handleReadyToMoveOn()
-    // })
 
     socket.on('game over', (gameObj) => {
       this.setState({game: gameObj});
     })
-    // socket.on('disconnectTimeOut', () => {
-    //   // this function is related to the commented out function
-    //   // in server/index.js
-    //   console.log('disconnectTimeOut')
-    //   this.props.route.sendToLobby.call(this, true);
-    // })
 
     socket.on('timer', (data) => {
       this.setState({time: data.time})
@@ -130,7 +128,6 @@ class Game extends React.Component {
   }
 
   handleReadyToMoveOn() {
-    console.log('move on triggered')
     socket.emit('ready to move on', {gameName: this.props.params.gamename, username: this.state.username});
   }
 
