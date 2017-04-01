@@ -5,7 +5,7 @@ import PlayingGame from './PlayingGame.jsx';
 import EndOfGame from './EndOfGame.jsx';
 import $ from 'jquery';
 import io from 'socket.io-client';
-import { PageHeader } from 'react-bootstrap';
+import { PageHeader, Panel, ListGroup, ListGroupItem } from 'react-bootstrap';
 
 class Game extends React.Component {
   constructor(props) {
@@ -13,12 +13,15 @@ class Game extends React.Component {
     this.state = {
       game: null,
       username: null,
-      time: null
+      time: null,
+      value: ''
     };
 
     this.getGameData = this.getGameData.bind(this);
     this.getUsername = this.getUsername.bind(this);
     this.leaveGame = this.leaveGame.bind(this);
+    this.sendMessageToChatroom = this.sendMessageToChatroom.bind(this);
+    this.handleMessageChange = this.handleMessageChange.bind(this);
     this.handleResponse = this.handleResponse.bind(this);
     this.handlePromptSubmission = this.handlePromptSubmission.bind(this);
     this.handleJudgeSelection = this.handleJudgeSelection.bind(this);
@@ -121,6 +124,15 @@ class Game extends React.Component {
     }
   }
 
+  sendMessageToChatroom(message) {
+    this.props.route.ioSocket.emit('game chat', {gameName: this.state.game.gameName, message: message, username: this.state.username});
+    this.setState({value: ''});
+  }
+
+  handleMessageChange(event) {
+    this.setState({value: event.target.value});
+  }
+
   handleResponse(response) {
     this.props.route.ioSocket.emit('submit response', {gameName: this.props.params.gamename, username: this.state.username, response: response});
   }
@@ -144,6 +156,9 @@ class Game extends React.Component {
         {this.state.game && this.state.username && this.state.game.gameStage === 'waiting' && <WaitingRoom game={this.state.game} time={this.state.time} user={this.state.username} sendToLobby={this.props.route.sendToLobby} leaveGame={this.leaveGame} />}
         {this.state.game && this.state.username && this.state.game.gameStage === 'playing' && <PlayingGame game={this.state.game} time={this.state.time} user={this.state.username} handleResponse={this.handleResponse} handlePromptSubmission={this.handlePromptSubmission} handleJudgeSelection={this.handleJudgeSelection} handleReadyToMoveOn={this.handleReadyToMoveOn}/>}
         {this.state.game && this.state.username && this.state.game.gameStage === 'gameover' && <EndOfGame game={this.state.game} sendToLobby={this.props.route.sendToLobby}/>}
+
+        <input placeholder="Type here..." value={this.state.value} onChange={this.handleMessageChange}/>
+        <button onClick={() => this.sendMessageToChatroom(this.state.value)}>Send</button>
       </div>
     )
   }
