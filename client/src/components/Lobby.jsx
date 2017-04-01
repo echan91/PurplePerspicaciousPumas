@@ -6,7 +6,8 @@ import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
 import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
-
+var Filter = require('bad-words');
+var filter = new Filter();
 
 // TODO: build logic to prevent users from joining a full game
 
@@ -48,6 +49,7 @@ class Lobby extends React.Component {
     this.showFriendNameInput = this.showFriendNameInput.bind(this);
     this.handleAddFriendByInputName = this.handleAddFriendByInputName.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleLogout = this.handleLogout.bind(this);
 
     this.props.route.ioSocket.on('get games', (data) => {
       console.log(data.games);
@@ -57,7 +59,7 @@ class Lobby extends React.Component {
     this.props.route.ioSocket.on('update games', (data) => {
       console.log(data.games);
       this.setState({games: data.games});
-    })
+    });
 
   }
 
@@ -104,7 +106,7 @@ class Lobby extends React.Component {
   }
 
   sendMessageToChatroom(message) {
-    this.props.route.ioSocket.send({message: message, username: this.state.username});
+    this.props.route.ioSocket.send({message: filter.clean(message), username: this.state.username});
     this.setState({value: ''});
   }
 
@@ -162,6 +164,15 @@ class Lobby extends React.Component {
     this.setState({friendName: event.target.value});
   }
 
+  handleLogout() {
+    console.log('logout this: ', this);
+    //leave lobby should be logging out:
+    console.log(this.state.username);
+    this.props.route.ioSocket.emit('leave lobby', this.state.username, (data) => {
+      console.log('data from backend!');
+    });
+  }
+
   render() {
     const currentGames = (
       <div>
@@ -194,7 +205,7 @@ class Lobby extends React.Component {
 
     return (
       <Col id="lobby" sm={6} smOffset={3}>
-        <PageHeader>Lobby for {this.state.username}</PageHeader>
+        <PageHeader>Lobby for {this.state.username} {  }<Button onClick={this.handleLogout}>Logout</Button></PageHeader>
         <Button onClick={this.handleGameCreationChoice} value="ordinary">Start a New Game</Button> {   }
 
         <Button onClick={this.handleGameCreationChoice} value="private">Start a New Private Game</Button>
