@@ -165,10 +165,9 @@ class Lobby extends React.Component {
   }
 
   handleLogout() {
-    console.log('logout this: ', this);
     //leave lobby should be logging out:
     console.log(this.state.username);
-    this.props.route.ioSocket.emit('leave lobby', this.state.username, (data) => {
+    this.props.route.ioSocket.emit('leave lobby', this.state, (data) => {
       console.log('data from backend!');
     });
   }

@@ -49,6 +49,7 @@ app.post('/signup', function (req, res) {
 
 app.post('/login', passport.authenticate('local'), function(req, res) {
   console.log('in login request');
+  console.log('request session:', req.session);
   res.status(201).send('success')
 })
 
