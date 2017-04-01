@@ -6,7 +6,7 @@ import io from 'socket.io-client';
 import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
-import { ButtonToolbar, Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
+import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormControl, ControlLabel, PageHeader } from 'react-bootstrap';
 
 
 // TODO: build logic to prevent users from joining a full game
