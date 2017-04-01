@@ -17,6 +17,7 @@ class App extends Component {
 
     this.sendToGame = this.sendToGame.bind(this);
     this.sendToLobby = this.sendToLobby.bind(this);
+    this.sendToHomePage = this.sendToHomePage.bind(this);
   }
 
   sendToLobby(disconnectTimeOut) {
@@ -27,6 +28,10 @@ class App extends Component {
   sendToGame(gameName, username) {
     ioSocket.emit('leave lobby', {id: ioSocket.id, username: username});
     hashHistory.push(/game/ + gameName);
+  }
+
+  sendToHomePage() {
+    hashHistory.push('/');
   }
 
   render() {
@@ -42,7 +47,8 @@ class App extends Component {
             component={Lobby}
             ioSocket={ioSocket}
             sendToGame={this.sendToGame}
-            disconnectTimeOut={this.state.disconnectTimeOut} />
+            disconnectTimeOut={this.state.disconnectTimeOut}
+            sendToHomePage={this.sendToHomePage} />
           <Route path="/lobby/:disconnectTimeOut"
             component={Lobby}
             ioSocket={ioSocket}

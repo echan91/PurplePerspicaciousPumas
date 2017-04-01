@@ -153,11 +153,10 @@ class Lobby extends React.Component {
     //toggle a flag here to showup the form
     this.setState( prevState => ({addFriend: !prevState.addFriend}));
   }
-  //herer!!!
+
   handleAddFriendByInputName(event) {
     event.preventDefault();
     this.addToFriendList(this.state.friendName, this.state.username, true);
-
   }
 
   handleInputChange(event) {
@@ -165,10 +164,21 @@ class Lobby extends React.Component {
   }
 
   handleLogout() {
-    //leave lobby should be logging out:
     console.log(this.state.username);
-    this.props.route.ioSocket.emit('leave lobby', this.state, (data) => {
-      console.log('data from backend!');
+    let logoutFunc = this.props.route.sendToHomePage;
+    this.props.route.ioSocket.emit('leave lobby', this.state);
+
+    $.ajax({
+      url: '/logout',
+      method: 'GET',
+      headers: {'content-type': 'application/json'},
+      success: data => {
+        console.log('handleLogout data: ', data);
+        logoutFunc();
+      },
+      error: (err) => {
+        console.log('error logging out: ', err);
+      }
     });
   }
 
