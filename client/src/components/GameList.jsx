@@ -14,7 +14,7 @@ export default (props) => {
 
   return (
     <ListGroup id="test">
-      {openGames.map( (game) => <GameListEntry sendToGame={props.sendToGame} name={game.gameName} key={game._id} game={game} />)}
+      {openGames.map( (game) => <GameListEntry username={props.username} sendToGame={props.sendToGame} name={game.gameName} key={game._id} game={game} />)}
     </ListGroup>
   )
 }
