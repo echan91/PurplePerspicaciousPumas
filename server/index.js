@@ -71,8 +71,7 @@ app.get('/games', function(req, res) {
     res.send(sortedGames);
   })
 });
-<<<<<<< HEAD
-=======
+
 //add to friendlist:
 app.post('/friends', function(req, res) {
    console.log(req.body);
@@ -114,7 +113,6 @@ app.post('/friends', function(req, res) {
    }
    // UserQueries.addFriendToList(req.body.friend, req.body.username);
 });
->>>>>>> 55bfb5f8feae6ee74c0548515f31e173f3b94664
 
 app.post('/games', function(req, res) {
   var gameInstance = req.body;
