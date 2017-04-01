@@ -155,13 +155,11 @@ class Lobby extends React.Component {
   handleAddFriendByInputName(event) {
     event.preventDefault();
     this.addToFriendList(this.state.friendName, this.state.username, true);
-    console.log(this.state.friendName);
 
   }
 
   handleInputChange(event) {
     this.setState({friendName: event.target.value});
-    console.log(this.state.friendName);
   }
 
   render() {
