@@ -243,6 +243,9 @@ io.on('connection', (socket) => {
   });
 
   // CHATS
+  socket.on('game chat', data => {
+    console.log('Game message received', data);
+  })
 
   // GAMES
   socket.on('join game', function(data) {
@@ -284,7 +287,8 @@ LOGIC TO CREATE COUNTDOWN BEFORE GAME STARTS
 **************************************************************/
             Games[gameName] = {
               time: null,
-              timer: null
+              timer: null,
+              chat: []
             }
             Games[gameName].time = 5;
             Games[gameName].timer = setInterval( () => {
@@ -325,10 +329,7 @@ ROUND STARTING TIMER
     console.log('round starts!', data);
     clearInterval(Games[gameName].timer);
     console.log(Games[gameName])
-    Games[gameName] = {
-      time: 15,
-      timer: null
-    }
+    Games[gameName] = Object.assign(Games[gameName], {time: 15, timer: null});
     Games[gameName].timer = setInterval( () => {
       // io.to(gameName).emit('timer', {time: Games[gameName].time--})
       io.to(gameName).emit('timer', {time: Games[gameName].time--})
@@ -467,10 +468,7 @@ ROUND STARTING TIMER
     var {gameName} = data;
     var winner = ''
     clearInterval(Games[gameName].timer);
-    Games[gameName] = {
-      time: 10,
-      timer: null
-    }
+    Games[gameName] = Object.assign(Games[gameName], {time: 10, timer: null});
     Games[gameName].timer = setInterval( () => {
       io.to(gameName).emit('timer', {time: Games[gameName].time--})
       if (Games[gameName].time < 0) {
@@ -483,7 +481,7 @@ ROUND STARTING TIMER
           Rounds[currentRound].winner = winner;
           Rounds[currentRound].stage++;
           queries.updateRounds(gameName, Rounds)
-        
+
 /*****************************************************************************************
 COPYING JUDGE SELECTION CODE HERE
 *****************************************************************************************/
@@ -496,10 +494,7 @@ COPYING JUDGE SELECTION CODE HERE
     LOGIC FOR WINNERS DISPLAY PAGE
     **************************************************************************************************/
                   clearInterval(Games[gameName].timer)
-                  Games[gameName] = {
-                    time: 10,
-                    timer: null
-                  }
+                  Games[gameName] = Object.assign(Games[gameName], {time: 10, timer: null});
                   Games[gameName].timer = setInterval( () => {
                     io.to(gameName).emit('timer',{time: Games[gameName].time--})
                     if (Games[gameName].time < 0) {
@@ -546,7 +541,7 @@ COPYING JUDGE SELECTION CODE HERE
         })
 
 /*****************************************************************************************
-*****************************************************************************************/      
+*****************************************************************************************/
       }
     }, 1000)
   })
@@ -573,10 +568,7 @@ COPYING JUDGE SELECTION CODE HERE
 LOGIC FOR WINNERS DISPLAY PAGE
 **************************************************************************************************/
               clearInterval(Games[gameName].timer)
-              Games[gameName] = {
-                time: 10,
-                timer: null
-              }
+              Games[gameName] = Object.assign(Games[gameName], {time: 10, timer: null});
               Games[gameName].timer = setInterval( () => {
                 io.to(gameName).emit('timer',{time: Games[gameName].time--})
                 if (Games[gameName].time < 0) {
