@@ -7,7 +7,6 @@ var LocalStrategy = require('passport-local').Strategy;
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var queries = require('../db/db-queries.js');
-var UserQueries = require('../db/db-usermodels-queries.js');
 var helpers = require('./helpers.js');
 
 var User = models.userModel;
@@ -33,8 +32,7 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.post('/signup', function (req, res) {
-  //add friendlist here:
-  User.register(new User({username: req.body.username, email: req.body.email, friendList: req.body.friendList}), req.body.password, function (err, user) {
+  User.register(new User({username: req.body.username, email: req.body.email}), req.body.password, function (err, user) {
     if (err) {
       console.log(err);
       return res.status(400).send(err);
@@ -73,50 +71,10 @@ app.get('/games', function(req, res) {
     res.send(sortedGames);
   })
 });
-//add to friendlist:
-app.post('/friends', function(req, res) {
-   console.log(req.body);
-   //if user typed in the friend name
-     //check if the name typed in exist in the database
-     //if yes, check if it's the user itself
-       //if not self, add to friendlist
-     //if no, send back an error code to front-end
-   if (req.body.typedIn) {
-    UserQueries.selectUserByName(req.body.friend)
-    .then((data) => {
-      console.log('this is the selected data: ', data);
-      if (!data) {
-        //
-        res.status(400).send('This person doesn\'t exist!');
-      } else {
-        //
-        UserQueries.addFriendToList(req.body.friend, req.body.username)
-        .then(() => {
-          res.status(201).send('successfully added friend');
-        })
-        .catch((err) => {
-          res.status(400).send('Uh oh, there\'s an error adding friend');
-        });
-      }
-    })
-    .catch(err => {
-      res.status(400).send('Uh oh, an error occured!');
-    });
-   } else {
-    
-    UserQueries.addFriendToList(req.body.friend, req.body.username)
-    .then(() => {
-      res.status(201).send('successfully added friend');
-    })
-    .catch((err) => {
-      res.status(400).send('Uh oh, there\'s an error adding friend');
-    });
-   }
-   // UserQueries.addFriendToList(req.body.friend, req.body.username);
-});
 
 app.post('/games', function(req, res) {
   var gameInstance = req.body;
+  console.log(req.body);
   console.log('Game Instance: ', gameInstance);
 
   helpers.addPrompts(gameInstance);
