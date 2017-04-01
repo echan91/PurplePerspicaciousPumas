@@ -1,6 +1,9 @@
 'use strict';
 import React from 'react';
 import { ListGroup, ListGroupItem, Col, Button } from 'react-bootstrap';
+import io from 'socket.io-client';
+
+// const socket = io();
 
 class Winner extends React.Component {
   constructor(props) {
@@ -8,6 +11,17 @@ class Winner extends React.Component {
     this.state = {
       readyToMoveOn: false
     }
+    this.moveOn = this.moveOn.bind(this);
+
+    // socket.on('starting next round', (data) => {
+    //   this.moveOn();
+    //   console.log('starting next round', data)
+    // })
+  }
+
+  moveOn(){
+    this.setState({readyToMoveOn: true})
+    this.props.handleReadyToMoveOn();
   }
 
   render() {

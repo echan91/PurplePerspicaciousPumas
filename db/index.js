@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var mongodbURL = process.env.MONGODB_URI || 'mongodb://localhost/orange-to-orange';
+var mongodbURL = process.env.MONGODB_URI || 'mongodb://legacy:legacy@ds111940.mlab.com:11940/gg-legacy-dev';
 
 mongoose.connect(mongodbURL);
 var Schema = mongoose.Schema;

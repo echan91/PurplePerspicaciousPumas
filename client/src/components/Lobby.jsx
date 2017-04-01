@@ -2,7 +2,6 @@
 import React from 'react';
 import GameList from './GameList.jsx';
 import $ from 'jquery';
-import io from 'socket.io-client';
 import CreateGame from './CreateGame.jsx';
 import YourGames from './YourGames.jsx';
 import PlayerDisconnected from './PlayerDisconnected.jsx'
@@ -10,6 +9,7 @@ import { Button, Form, FormGroup, Panel, ListGroup, ListGroupItem, Col, FormCont
 
 
 // TODO: build logic to prevent users from joining a full game
+
 
 class Lobby extends React.Component {
   constructor(props) {
@@ -172,9 +172,9 @@ class Lobby extends React.Component {
 
     let mainPanel = currentGames;
     if (this.state.private === 1) {
-      mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/>;
+      mainPanel = <CreateGame username={this.state.username} sendToGame={this.props.route.sendToGame} private={false} handlePrivateState={this.handlePrivateState}/>;
     } else if (this.state.private === -1) {
-      mainPanel = <CreateGame sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
+      mainPanel = <CreateGame username={this.state.username} sendToGame={this.props.route.sendToGame} private={true} handlePrivateState={this.handlePrivateState}/>;
     }
 
     let header = (<span>

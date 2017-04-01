@@ -25,10 +25,10 @@ const GameListEntry = (props) => {
 	    	    pass = prompt('Please enter room password: ');
 	    	}
 	    	if(pass !== null) {
-		    	props.sendToGame(props.name);
+		    	props.sendToGame(props.name, props.username);
 	    	}
     	} else {
-	    	props.sendToGame(props.name);
+	    	props.sendToGame(props.name, props.username);
 	    }
 	}}>
     	<em>Prompt Type:</em> {promptType} | <em>Current Players:</em> {playerList}
