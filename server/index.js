@@ -243,6 +243,9 @@ io.on('connection', (socket) => {
   });
 
   // CHATS
+  socket.on('game chat', data => {
+    console.log('Game message received', data);
+  })
 
   // GAMES
   socket.on('join game', function(data) {
@@ -483,7 +486,7 @@ ROUND STARTING TIMER
           Rounds[currentRound].winner = winner;
           Rounds[currentRound].stage++;
           queries.updateRounds(gameName, Rounds)
-        
+
 /*****************************************************************************************
 COPYING JUDGE SELECTION CODE HERE
 *****************************************************************************************/
@@ -546,7 +549,7 @@ COPYING JUDGE SELECTION CODE HERE
         })
 
 /*****************************************************************************************
-*****************************************************************************************/      
+*****************************************************************************************/
       }
     }, 1000)
   })
