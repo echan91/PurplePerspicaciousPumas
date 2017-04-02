@@ -36,6 +36,7 @@ class Game extends React.Component {
       console.log('round starts!')
       this.props.route.ioSocket.emit('round started', {
         gameName: this.state.game.gameName,
+        stage: this.state.game.rounds.stage,
         username: this.state.username
       })
     })
@@ -56,6 +57,7 @@ class Game extends React.Component {
       this.setState({game: gameObj});
       this.props.route.ioSocket.emit('round started', {
         gameName: this.state.game.gameName,
+        stage: this.state.game.rounds.stage,
         username: this.state.username
       })
     })

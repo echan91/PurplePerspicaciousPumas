@@ -332,13 +332,12 @@ ROUND STARTING TIMER
 
 ****************************************************************************************************************************/
   socket.on('round started', (data) => {
-    var { gameName, username } = data;
+    var { gameName, stage, username } = data;
     console.log('round starts!', data);
     clearInterval(Games[gameName].timer);
-    console.log(Games[gameName])
+    console.log(gameName, stage, username);
     Games[gameName] = Object.assign(Games[gameName], {time: 15, timer: null});
     Games[gameName].timer = setInterval( () => {
-      // io.to(gameName).emit('timer', {time: Games[gameName].time--})
       io.to(gameName).emit('timer', {time: Games[gameName].time--})
       console.log(Games[gameName].time);
       if (Games[gameName].time < 0){
